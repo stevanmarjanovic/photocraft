@@ -3631,3 +3631,27 @@ curves	Smooth	Làm mượt
 	Sent to {printer}	Đã gửi tới {printer}
 	set in Print Settings…	đặt trong thiết lập in…
 	ICO is limited to 256 × 256 pixels	ICO giới hạn ở 256 × 256 pixel
+
+# Camera Raw › Presets panel
+	Add to Favorites	Thêm vào mục yêu thích
+	Applied Camera Raw preset {name}	Đã áp dụng thiết lập sẵn Camera Raw {name}
+	Check All	Chọn tất cả
+	Check None	Bỏ chọn tất cả
+	Choose at least one group of settings for the preset	Hãy chọn ít nhất một nhóm cài đặt cho thiết lập sẵn
+	Create Preset	Tạo thiết lập sẵn
+	Create Preset…	Tạo thiết lập sẵn…
+	Favorites	Yêu thích
+	Import Presets…	Nhập thiết lập sẵn…
+	Imported Camera Raw preset {name}	Đã nhập thiết lập sẵn Camera Raw {name}
+	Move to Group	Chuyển vào nhóm
+	New Group…	Nhóm mới…
+	No presets match.	Không có thiết lập sẵn nào khớp.
+	No presets yet. Use + to save the current settings as a preset.	Chưa có thiết lập sẵn nào. Dùng + để lưu cài đặt hiện tại thành thiết lập sẵn.
+	Preset name	Tên thiết lập sẵn
+	Remove from Favorites	Xóa khỏi mục yêu thích
+	Search presets	Tìm thiết lập sẵn
+	Settings: {sections}	Cài đặt: {sections}
+	Update with Current Settings	Cập nhật bằng cài đặt hiện tại
+	not a Camera Raw preset file	không phải tệp thiết lập sẵn Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Đã nhập thiết lập sẵn Camera Raw {name} ({n} cài đặt không được hỗ trợ)
+	No Camera Raw preset named {name}	Không có thiết lập sẵn Camera Raw nào tên {name}

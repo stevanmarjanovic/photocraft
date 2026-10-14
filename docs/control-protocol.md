@@ -116,6 +116,11 @@ store expose and persist the same setting; scripts keep using canonical command 
 | `document.presets.save` | `{"name":"Product square","settings":{"width":1600,"height":1600,"background":"transparent"}}`: save a snapshot; names are trimmed, 1–255 characters, and ASCII case-insensitive duplicates are rejected |
 | `document.presets.get` | `{"name":"Product square"}` → `{preset,params}`: fetch settings; pass `params` to `file.new` to create a document, optionally adding a document `name` |
 | `document.presets.delete` | `{"name":"Product square"}`: delete the named saved configuration |
+| `cameraRaw.presets.list` | `{}` → `{groups:[{name,presets:[{name,group,favorite,settings}]}],favorites,sections}`: Camera Raw presets; `sections` maps Create Preset's checkboxes to settings |
+| `cameraRaw.presets.save` | `{"name":"Warm","group":"Looks"?,"settings":{"temperature":12,"vibrance":20},"replace":false?}`: save a preset holding only these settings (a new group is created); `replace: true` updates an existing preset |
+| `cameraRaw.presets.get` / `cameraRaw.presets.export` | `{"preset":"Warm","group":"Looks"?}` → the preset / `{xmp,fileName}`, a Camera Raw preset file Photoshop imports |
+| `cameraRaw.presets.import` | `{"xmp":"<file text>","name"?,"group"?,"fileName"?}`: add a Camera Raw preset or settings `.xmp`; settings PhotoCraft has no control for are listed in `ignored` |
+| `cameraRaw.presets.edit` | `{"action":"favorite","preset":"Warm","favorite":true}`, or `rename`, `delete`, `move`, `newGroup`, `renameGroup`, `deleteGroup` as for the other preset panels |
 | `document.recent.list` | `{}` → `{recent:[settings]}`: File › New › Recent, the settings of the documents last created with the New Document dialog, newest first (at most 20) |
 | `document.recent.add` | `{"settings":{…as document.presets.save}}`: put settings first in Recent (the dialog does this after Create; equal entries collapse); not recorded into actions |
 | `type.hitTest` | `{"layer":id?,"x":px,"y":px}`: character under a document point. No `layer` picks the topmost visible type layer there. Result `{"layer","index","line","inside"}` |
@@ -457,6 +462,18 @@ opened). Unknown `ui` or settings properties, non-boolean `before` / `commit` / 
 `pointCurveGreen`, `pointCurveBlue`) are empty or 2–16 finite points in 0–255 with inputs at
 least one level apart. Commit dispatches one `filter.cameraRaw` engine command; a failed commit
 keeps the dialog open for correction. Nothing else writes document history.
+
+**Presets.** `params.ui.presets`, sent on its own, drives the dialog's Presets panel:
+`{"panel":"presets"|"edit"}` switches the right column, `{"apply":name,"group":name?}` sets the
+preset's settings over the dialog's (the others stay; OK commits them as usual),
+`{"create":{"name":str,"group":name?,"sections":["Light","Color","Effects","Curve","Color Mixer","Color Grading","Detail"]?}}`
+saves the chosen sections of the current settings (every section by default),
+`{"update":name}` replaces a preset's values with the current ones (same settings kept),
+`{"import":true}` and `{"export":name}` read or write a Camera Raw preset `.xmp` through the file
+dialog. `ui.inspect.cameraRaw.presets` is `{panel, applied: {group, name}|null}`. The list itself
+belongs to the engine (`cameraRaw.presets.*` below), so agents can also list, save, rename,
+favourite, move, delete, import and export presets without the dialog; presets persist with the
+preferences.
 
 **Opening a raw file.** An interactive open (File › Open, Open Recent, drag and drop, the
 command line) of a camera raw developed from its sensor data shows this dialog first, titled

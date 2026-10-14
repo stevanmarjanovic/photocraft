@@ -3319,3 +3319,27 @@ curves	Smooth	매끄럽게
 	Sent to {printer}	{printer}(으)로 전송됨
 	set in Print Settings…	인쇄 설정에서 지정…
 	ICO is limited to 256 × 256 pixels	ICO는 256 × 256픽셀로 제한됩니다
+
+# Camera Raw › Presets panel
+	Add to Favorites	즐겨찾기에 추가
+	Applied Camera Raw preset {name}	Camera Raw 사전 설정 {name}을(를) 적용했습니다
+	Check All	모두 선택
+	Check None	모두 선택 해제
+	Choose at least one group of settings for the preset	사전 설정에 포함할 설정 그룹을 하나 이상 선택하십시오
+	Create Preset	사전 설정 만들기
+	Create Preset…	사전 설정 만들기…
+	Favorites	즐겨찾기
+	Import Presets…	사전 설정 가져오기…
+	Imported Camera Raw preset {name}	Camera Raw 사전 설정 {name}을(를) 가져왔습니다
+	Move to Group	그룹으로 이동
+	New Group…	새 그룹…
+	No presets match.	일치하는 사전 설정이 없습니다.
+	No presets yet. Use + to save the current settings as a preset.	아직 사전 설정이 없습니다. +를 눌러 현재 설정을 사전 설정으로 저장하십시오.
+	Preset name	사전 설정 이름
+	Remove from Favorites	즐겨찾기에서 제거
+	Search presets	사전 설정 검색
+	Settings: {sections}	설정: {sections}
+	Update with Current Settings	현재 설정으로 업데이트
+	not a Camera Raw preset file	Camera Raw 사전 설정 파일이 아닙니다
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera Raw 사전 설정 {name}을(를) 가져왔습니다(지원되지 않는 설정 {n}개)
+	No Camera Raw preset named {name}	이름이 {name}인 Camera Raw 사전 설정이 없습니다

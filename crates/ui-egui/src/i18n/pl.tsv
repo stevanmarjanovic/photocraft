@@ -3742,3 +3742,27 @@ curves	Smooth	Wygładź
 	Sent to {printer}	Wysłano do {printer}
 	set in Print Settings…	ustawiane w ustawieniach druku…
 	ICO is limited to 256 × 256 pixels	ICO jest ograniczony do 256 × 256 pikseli
+
+# Camera Raw › Presets panel
+	Add to Favorites	Dodaj do ulubionych
+	Applied Camera Raw preset {name}	Zastosowano ustawienie wstępne Camera Raw {name}
+	Check All	Zaznacz wszystko
+	Check None	Odznacz wszystko
+	Choose at least one group of settings for the preset	Wybierz co najmniej jedną grupę ustawień dla ustawienia wstępnego
+	Create Preset	Utwórz ustawienie wstępne
+	Create Preset…	Utwórz ustawienie wstępne…
+	Favorites	Ulubione
+	Import Presets…	Importuj ustawienia wstępne…
+	Imported Camera Raw preset {name}	Zaimportowano ustawienie wstępne Camera Raw {name}
+	Move to Group	Przenieś do grupy
+	New Group…	Nowa grupa…
+	No presets match.	Brak pasujących ustawień wstępnych.
+	No presets yet. Use + to save the current settings as a preset.	Brak ustawień wstępnych. Użyj +, aby zapisać bieżące ustawienia jako ustawienie wstępne.
+	Preset name	Nazwa ustawienia wstępnego
+	Remove from Favorites	Usuń z ulubionych
+	Search presets	Szukaj ustawień wstępnych
+	Settings: {sections}	Ustawienia: {sections}
+	Update with Current Settings	Aktualizuj bieżącymi ustawieniami
+	not a Camera Raw preset file	to nie jest plik ustawienia wstępnego Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Zaimportowano ustawienie wstępne Camera Raw {name} (nieobsługiwane ustawienia: {n})
+	No Camera Raw preset named {name}	Brak ustawienia wstępnego Camera Raw o nazwie {name}

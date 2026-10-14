@@ -2829,3 +2829,28 @@ curves	Smooth	Suavizar
 	Sent to {printer}	Enviado a {printer}
 	set in Print Settings…	se establece en Ajustes de impresión…
 	ICO is limited to 256 × 256 pixels	ICO está limitado a 256 × 256 píxeles
+
+# Camera Raw › Presets panel
+	Add to Favorites	Añadir a favoritos
+	Applied Camera Raw preset {name}	Ajuste preestablecido de Camera Raw {name} aplicado
+	Check All	Marcar todo
+	Check None	No marcar nada
+	Choose at least one group of settings for the preset	Elija al menos un grupo de ajustes para el ajuste preestablecido
+	Create Preset	Crear ajuste preestablecido
+	Create Preset…	Crear ajuste preestablecido…
+	Favorites	Favoritos
+	Import Presets…	Importar ajustes preestablecidos…
+	Imported Camera Raw preset {name}	Ajuste preestablecido de Camera Raw {name} importado
+	Move to Group	Mover al grupo
+	New Group…	Nuevo grupo…
+	No presets match.	Ningún ajuste preestablecido coincide.
+	No presets yet. Use + to save the current settings as a preset.	Todavía no hay ajustes preestablecidos. Use + para guardar los ajustes actuales como ajuste preestablecido.
+	Preset name	Nombre del ajuste preestablecido
+	Remove from Favorites	Quitar de favoritos
+	Search presets	Buscar ajustes preestablecidos
+	Settings	Ajustes
+	Settings: {sections}	Ajustes: {sections}
+	Update with Current Settings	Actualizar con los ajustes actuales
+	not a Camera Raw preset file	no es un archivo de ajuste preestablecido de Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Ajuste preestablecido de Camera Raw {name} importado ({n} ajustes no admitidos)
+	No Camera Raw preset named {name}	No hay ningún ajuste preestablecido de Camera Raw llamado {name}

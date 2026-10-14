@@ -3876,3 +3876,27 @@ cameraData	Lens	Lens
 	Ink Characteristics	Mürekkep Özellikleri
 	Solidity:	Doluluk:
 	Redrawing	Yeniden çiziliyor
+
+# Camera Raw › Presets panel
+	Add to Favorites	Sık Kullanılanlara Ekle
+	Applied Camera Raw preset {name}	Camera Raw ön ayarı {name} uygulandı
+	Check All	Tümünü İşaretle
+	Check None	Hiçbirini İşaretleme
+	Choose at least one group of settings for the preset	Ön ayar için en az bir ayar grubu seçin
+	Create Preset	Ön Ayar Oluştur
+	Create Preset…	Ön Ayar Oluştur…
+	Favorites	Sık Kullanılanlar
+	Import Presets…	Ön Ayarları İçe Aktar…
+	Imported Camera Raw preset {name}	Camera Raw ön ayarı {name} içe aktarıldı
+	Move to Group	Gruba Taşı
+	New Group…	Yeni Grup…
+	No presets match.	Eşleşen ön ayar yok.
+	No presets yet. Use + to save the current settings as a preset.	Henüz ön ayar yok. Geçerli ayarları ön ayar olarak kaydetmek için + düğmesini kullanın.
+	Preset name	Ön ayar adı
+	Remove from Favorites	Sık Kullanılanlardan Kaldır
+	Search presets	Ön ayarlarda ara
+	Settings: {sections}	Ayarlar: {sections}
+	Update with Current Settings	Geçerli Ayarlarla Güncelle
+	not a Camera Raw preset file	Camera Raw ön ayar dosyası değil
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera Raw ön ayarı {name} içe aktarıldı ({n} ayar desteklenmiyor)
+	No Camera Raw preset named {name}	{name} adlı Camera Raw ön ayarı yok

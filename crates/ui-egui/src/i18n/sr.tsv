@@ -4219,3 +4219,27 @@ shape	Appearance	Izgled
 	Ink Characteristics	Karakteristike mastila
 	Solidity:	Punoća:
 	Redrawing	Ponovno iscrtavanje
+
+# Camera Raw › Presets panel
+	Add to Favorites	Dodaj u omiljene
+	Applied Camera Raw preset {name}	Primenjen je Camera Raw šablon {name}
+	Check All	Označi sve
+	Check None	Poništi sve
+	Choose at least one group of settings for the preset	Izaberite bar jednu grupu podešavanja za šablon
+	Create Preset	Napravi šablon
+	Create Preset…	Napravi šablon…
+	Favorites	Omiljeni
+	Import Presets…	Uvezi šablone…
+	Imported Camera Raw preset {name}	Uvezen je Camera Raw šablon {name}
+	Move to Group	Premesti u grupu
+	New Group…	Nova grupa…
+	No presets match.	Nijedan šablon se ne podudara.
+	No presets yet. Use + to save the current settings as a preset.	Još nema šablona. Pomoću + sačuvajte trenutna podešavanja kao šablon.
+	Preset name	Ime šablona
+	Remove from Favorites	Ukloni iz omiljenih
+	Search presets	Pretraži šablone
+	Settings: {sections}	Podešavanja: {sections}
+	Update with Current Settings	Ažuriraj trenutnim podešavanjima
+	not a Camera Raw preset file	nije datoteka Camera Raw šablona
+	Imported Camera Raw preset {name} ({n} settings not supported)	Uvezen je Camera Raw šablon {name} (nepodržanih podešavanja: {n})
+	No Camera Raw preset named {name}	Nema Camera Raw šablona pod imenom {name}

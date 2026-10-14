@@ -3146,3 +3146,27 @@ curves	Smooth	Lisser
 	Sent to {printer}	Envoyé à {printer}
 	set in Print Settings…	défini dans les paramètres d’impression…
 	ICO is limited to 256 × 256 pixels	Le format ICO est limité à 256 × 256 pixels
+
+# Camera Raw › Presets panel
+	Add to Favorites	Ajouter aux favoris
+	Applied Camera Raw preset {name}	Préréglage Camera Raw {name} appliqué
+	Check All	Tout cocher
+	Check None	Tout décocher
+	Choose at least one group of settings for the preset	Choisissez au moins un groupe de paramètres pour le préréglage
+	Create Preset	Créer un préréglage
+	Create Preset…	Créer un préréglage…
+	Favorites	Favoris
+	Import Presets…	Importer des préréglages…
+	Imported Camera Raw preset {name}	Préréglage Camera Raw {name} importé
+	Move to Group	Déplacer vers le groupe
+	New Group…	Nouveau groupe…
+	No presets match.	Aucun préréglage ne correspond.
+	No presets yet. Use + to save the current settings as a preset.	Aucun préréglage pour l'instant. Utilisez + pour enregistrer les paramètres actuels comme préréglage.
+	Preset name	Nom du préréglage
+	Remove from Favorites	Retirer des favoris
+	Search presets	Rechercher des préréglages
+	Settings: {sections}	Paramètres : {sections}
+	Update with Current Settings	Mettre à jour avec les paramètres actuels
+	not a Camera Raw preset file	ce n'est pas un fichier de préréglage Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Préréglage Camera Raw {name} importé ({n} paramètres non pris en charge)
+	No Camera Raw preset named {name}	Aucun préréglage Camera Raw nommé {name}

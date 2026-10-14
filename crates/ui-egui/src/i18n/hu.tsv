@@ -4065,3 +4065,27 @@ cameraRaw	Yellow	Sárga
 	Ink Characteristics	Festék jellemzői
 	Solidity:	Fedőképesség:
 	Redrawing	Újrarajzolás
+
+# Camera Raw › Presets panel
+	Add to Favorites	Hozzáadás a kedvencekhez
+	Applied Camera Raw preset {name}	Camera Raw-előbeállítás alkalmazva: {name}
+	Check All	Összes bejelölése
+	Check None	Egyik sem
+	Choose at least one group of settings for the preset	Válasszon legalább egy beállításcsoportot az előbeállításhoz
+	Create Preset	Előbeállítás létrehozása
+	Create Preset…	Előbeállítás létrehozása…
+	Favorites	Kedvencek
+	Import Presets…	Előbeállítások importálása…
+	Imported Camera Raw preset {name}	Camera Raw-előbeállítás importálva: {name}
+	Move to Group	Áthelyezés csoportba
+	New Group…	Új csoport…
+	No presets match.	Nincs egyező előbeállítás.
+	No presets yet. Use + to save the current settings as a preset.	Még nincsenek előbeállítások. A + gombbal mentheti a jelenlegi beállításokat előbeállításként.
+	Preset name	Előbeállítás neve
+	Remove from Favorites	Eltávolítás a kedvencek közül
+	Search presets	Előbeállítások keresése
+	Settings: {sections}	Beállítások: {sections}
+	Update with Current Settings	Frissítés a jelenlegi beállításokkal
+	not a Camera Raw preset file	nem Camera Raw-előbeállításfájl
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera Raw-előbeállítás importálva: {name} ({n} beállítás nem támogatott)
+	No Camera Raw preset named {name}	Nincs {name} nevű Camera Raw-előbeállítás

@@ -3752,3 +3752,27 @@ navigator	Zoom	Zvětšení
 	Sent to {printer}	Odesláno do {printer}
 	set in Print Settings…	nastavuje se v nastavení tisku…
 	ICO is limited to 256 × 256 pixels	ICO je omezen na 256 × 256 pixelů
+
+# Camera Raw › Presets panel
+	Add to Favorites	Přidat do oblíbených
+	Applied Camera Raw preset {name}	Použito přednastavení Camera Raw {name}
+	Check All	Zaškrtnout vše
+	Check None	Zrušit vše
+	Choose at least one group of settings for the preset	Vyberte pro přednastavení alespoň jednu skupinu nastavení
+	Create Preset	Vytvořit přednastavení
+	Create Preset…	Vytvořit přednastavení…
+	Favorites	Oblíbené
+	Import Presets…	Importovat přednastavení…
+	Imported Camera Raw preset {name}	Importováno přednastavení Camera Raw {name}
+	Move to Group	Přesunout do skupiny
+	New Group…	Nová skupina…
+	No presets match.	Žádné přednastavení neodpovídá.
+	No presets yet. Use + to save the current settings as a preset.	Zatím žádná přednastavení. Pomocí + uložíte aktuální nastavení jako přednastavení.
+	Preset name	Název přednastavení
+	Remove from Favorites	Odebrat z oblíbených
+	Search presets	Hledat přednastavení
+	Settings: {sections}	Nastavení: {sections}
+	Update with Current Settings	Aktualizovat podle aktuálního nastavení
+	not a Camera Raw preset file	není soubor přednastavení Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Importováno přednastavení Camera Raw {name} (nepodporovaná nastavení: {n})
+	No Camera Raw preset named {name}	Žádné přednastavení Camera Raw s názvem {name}

@@ -7,6 +7,11 @@
 //! geometry, defringe, …) are ignored and named in the report. Saving writes every supported
 //! control, so loading the file in Photoshop reproduces the dialog.
 //!
+//! Camera Raw presets (Presets panel › Import and Export) are the same files with a
+//! `crs:Name`, an optional `crs:Group` and `crs:PresetType="Normal"`; a preset holds only some
+//! settings. [`LoadReport::fields`] names the PhotoCraft settings a file held and
+//! [`save_preset`] writes only the chosen ones.
+//!
 //! White balance: a Camera Raw Filter on a rendered image uses the relative
 //! `IncrementalTemperature` / `IncrementalTint` (−100..=100), which are PhotoCraft's Temperature
 //! and Tint. The absolute `Temperature` (kelvin) / `Tint` of raw-file settings have no
@@ -22,93 +27,106 @@ pub const MAX_XMP_BYTES: usize = 4 * 1024 * 1024;
 
 type Field = fn(&mut CameraRaw) -> &mut f32;
 
-/// `crs:` scalar name, PhotoCraft field, and the slider range values are clamped to.
-const SCALARS: &[(&str, Field, f32, f32)] = &[
-    ("IncrementalTemperature", |p| &mut p.temperature, -100.0, 100.0),
-    ("IncrementalTint", |p| &mut p.tint, -100.0, 100.0),
-    ("Exposure2012", |p| &mut p.exposure, -5.0, 5.0),
-    ("Contrast2012", |p| &mut p.contrast, -100.0, 100.0),
-    ("Highlights2012", |p| &mut p.highlights, -100.0, 100.0),
-    ("Shadows2012", |p| &mut p.shadows, -100.0, 100.0),
-    ("Whites2012", |p| &mut p.whites, -100.0, 100.0),
-    ("Blacks2012", |p| &mut p.blacks, -100.0, 100.0),
-    ("Texture", |p| &mut p.texture, -100.0, 100.0),
-    ("Clarity2012", |p| &mut p.clarity, -100.0, 100.0),
-    ("Dehaze", |p| &mut p.dehaze, -100.0, 100.0),
-    ("Vibrance", |p| &mut p.vibrance, -100.0, 100.0),
-    ("Saturation", |p| &mut p.saturation, -100.0, 100.0),
-    ("ParametricShadows", |p| &mut p.curve_shadows, -100.0, 100.0),
-    ("ParametricDarks", |p| &mut p.curve_darks, -100.0, 100.0),
-    ("ParametricLights", |p| &mut p.curve_lights, -100.0, 100.0),
-    ("ParametricHighlights", |p| &mut p.curve_highlights, -100.0, 100.0),
-    ("ParametricShadowSplit", |p| &mut p.curve_splits[0], 0.0, 100.0),
-    ("ParametricMidtoneSplit", |p| &mut p.curve_splits[1], 0.0, 100.0),
-    ("ParametricHighlightSplit", |p| &mut p.curve_splits[2], 0.0, 100.0),
-    ("HueAdjustmentRed", |p| &mut p.hsl_hue[0], -100.0, 100.0),
-    ("HueAdjustmentOrange", |p| &mut p.hsl_hue[1], -100.0, 100.0),
-    ("HueAdjustmentYellow", |p| &mut p.hsl_hue[2], -100.0, 100.0),
-    ("HueAdjustmentGreen", |p| &mut p.hsl_hue[3], -100.0, 100.0),
-    ("HueAdjustmentAqua", |p| &mut p.hsl_hue[4], -100.0, 100.0),
-    ("HueAdjustmentBlue", |p| &mut p.hsl_hue[5], -100.0, 100.0),
-    ("HueAdjustmentPurple", |p| &mut p.hsl_hue[6], -100.0, 100.0),
-    ("HueAdjustmentMagenta", |p| &mut p.hsl_hue[7], -100.0, 100.0),
-    ("SaturationAdjustmentRed", |p| &mut p.hsl_sat[0], -100.0, 100.0),
-    ("SaturationAdjustmentOrange", |p| &mut p.hsl_sat[1], -100.0, 100.0),
-    ("SaturationAdjustmentYellow", |p| &mut p.hsl_sat[2], -100.0, 100.0),
-    ("SaturationAdjustmentGreen", |p| &mut p.hsl_sat[3], -100.0, 100.0),
-    ("SaturationAdjustmentAqua", |p| &mut p.hsl_sat[4], -100.0, 100.0),
-    ("SaturationAdjustmentBlue", |p| &mut p.hsl_sat[5], -100.0, 100.0),
-    ("SaturationAdjustmentPurple", |p| &mut p.hsl_sat[6], -100.0, 100.0),
-    ("SaturationAdjustmentMagenta", |p| &mut p.hsl_sat[7], -100.0, 100.0),
-    ("LuminanceAdjustmentRed", |p| &mut p.hsl_lum[0], -100.0, 100.0),
-    ("LuminanceAdjustmentOrange", |p| &mut p.hsl_lum[1], -100.0, 100.0),
-    ("LuminanceAdjustmentYellow", |p| &mut p.hsl_lum[2], -100.0, 100.0),
-    ("LuminanceAdjustmentGreen", |p| &mut p.hsl_lum[3], -100.0, 100.0),
-    ("LuminanceAdjustmentAqua", |p| &mut p.hsl_lum[4], -100.0, 100.0),
-    ("LuminanceAdjustmentBlue", |p| &mut p.hsl_lum[5], -100.0, 100.0),
-    ("LuminanceAdjustmentPurple", |p| &mut p.hsl_lum[6], -100.0, 100.0),
-    ("LuminanceAdjustmentMagenta", |p| &mut p.hsl_lum[7], -100.0, 100.0),
+/// `crs:` scalar name, PhotoCraft field, the slider range values are clamped to, and the
+/// PhotoCraft setting (the `CameraRaw` JSON key) the field belongs to.
+const SCALARS: &[(&str, Field, f32, f32, &str)] = &[
+    ("IncrementalTemperature", |p| &mut p.temperature, -100.0, 100.0, "temperature"),
+    ("IncrementalTint", |p| &mut p.tint, -100.0, 100.0, "tint"),
+    ("Exposure2012", |p| &mut p.exposure, -5.0, 5.0, "exposure"),
+    ("Contrast2012", |p| &mut p.contrast, -100.0, 100.0, "contrast"),
+    ("Highlights2012", |p| &mut p.highlights, -100.0, 100.0, "highlights"),
+    ("Shadows2012", |p| &mut p.shadows, -100.0, 100.0, "shadows"),
+    ("Whites2012", |p| &mut p.whites, -100.0, 100.0, "whites"),
+    ("Blacks2012", |p| &mut p.blacks, -100.0, 100.0, "blacks"),
+    ("Texture", |p| &mut p.texture, -100.0, 100.0, "texture"),
+    ("Clarity2012", |p| &mut p.clarity, -100.0, 100.0, "clarity"),
+    ("Dehaze", |p| &mut p.dehaze, -100.0, 100.0, "dehaze"),
+    ("Vibrance", |p| &mut p.vibrance, -100.0, 100.0, "vibrance"),
+    ("Saturation", |p| &mut p.saturation, -100.0, 100.0, "saturation"),
+    ("ParametricShadows", |p| &mut p.curve_shadows, -100.0, 100.0, "curveShadows"),
+    ("ParametricDarks", |p| &mut p.curve_darks, -100.0, 100.0, "curveDarks"),
+    ("ParametricLights", |p| &mut p.curve_lights, -100.0, 100.0, "curveLights"),
+    ("ParametricHighlights", |p| &mut p.curve_highlights, -100.0, 100.0, "curveHighlights"),
+    ("ParametricShadowSplit", |p| &mut p.curve_splits[0], 0.0, 100.0, "curveSplits"),
+    ("ParametricMidtoneSplit", |p| &mut p.curve_splits[1], 0.0, 100.0, "curveSplits"),
+    ("ParametricHighlightSplit", |p| &mut p.curve_splits[2], 0.0, 100.0, "curveSplits"),
+    ("HueAdjustmentRed", |p| &mut p.hsl_hue[0], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentOrange", |p| &mut p.hsl_hue[1], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentYellow", |p| &mut p.hsl_hue[2], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentGreen", |p| &mut p.hsl_hue[3], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentAqua", |p| &mut p.hsl_hue[4], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentBlue", |p| &mut p.hsl_hue[5], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentPurple", |p| &mut p.hsl_hue[6], -100.0, 100.0, "hslHue"),
+    ("HueAdjustmentMagenta", |p| &mut p.hsl_hue[7], -100.0, 100.0, "hslHue"),
+    ("SaturationAdjustmentRed", |p| &mut p.hsl_sat[0], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentOrange", |p| &mut p.hsl_sat[1], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentYellow", |p| &mut p.hsl_sat[2], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentGreen", |p| &mut p.hsl_sat[3], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentAqua", |p| &mut p.hsl_sat[4], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentBlue", |p| &mut p.hsl_sat[5], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentPurple", |p| &mut p.hsl_sat[6], -100.0, 100.0, "hslSat"),
+    ("SaturationAdjustmentMagenta", |p| &mut p.hsl_sat[7], -100.0, 100.0, "hslSat"),
+    ("LuminanceAdjustmentRed", |p| &mut p.hsl_lum[0], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentOrange", |p| &mut p.hsl_lum[1], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentYellow", |p| &mut p.hsl_lum[2], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentGreen", |p| &mut p.hsl_lum[3], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentAqua", |p| &mut p.hsl_lum[4], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentBlue", |p| &mut p.hsl_lum[5], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentPurple", |p| &mut p.hsl_lum[6], -100.0, 100.0, "hslLum"),
+    ("LuminanceAdjustmentMagenta", |p| &mut p.hsl_lum[7], -100.0, 100.0, "hslLum"),
     // Color Grading keeps the split-toning names for the shadow and highlight wheels' hue and
     // saturation, and the balance.
-    ("SplitToningShadowHue", |p| &mut p.grade_shadows.hue, 0.0, 360.0),
-    ("SplitToningShadowSaturation", |p| &mut p.grade_shadows.sat, 0.0, 100.0),
-    ("ColorGradeShadowLum", |p| &mut p.grade_shadows.lum, -100.0, 100.0),
-    ("ColorGradeMidtoneHue", |p| &mut p.grade_midtones.hue, 0.0, 360.0),
-    ("ColorGradeMidtoneSat", |p| &mut p.grade_midtones.sat, 0.0, 100.0),
-    ("ColorGradeMidtoneLum", |p| &mut p.grade_midtones.lum, -100.0, 100.0),
-    ("SplitToningHighlightHue", |p| &mut p.grade_highlights.hue, 0.0, 360.0),
-    ("SplitToningHighlightSaturation", |p| &mut p.grade_highlights.sat, 0.0, 100.0),
-    ("ColorGradeHighlightLum", |p| &mut p.grade_highlights.lum, -100.0, 100.0),
-    ("ColorGradeGlobalHue", |p| &mut p.grade_global.hue, 0.0, 360.0),
-    ("ColorGradeGlobalSat", |p| &mut p.grade_global.sat, 0.0, 100.0),
-    ("ColorGradeGlobalLum", |p| &mut p.grade_global.lum, -100.0, 100.0),
-    ("ColorGradeBlending", |p| &mut p.grade_blending, 0.0, 100.0),
-    ("SplitToningBalance", |p| &mut p.grade_balance, -100.0, 100.0),
-    ("Sharpness", |p| &mut p.sharpen_amount, 0.0, 150.0),
-    ("SharpenRadius", |p| &mut p.sharpen_radius, 0.5, 3.0),
-    ("SharpenDetail", |p| &mut p.sharpen_detail, 0.0, 100.0),
-    ("SharpenEdgeMasking", |p| &mut p.sharpen_masking, 0.0, 100.0),
-    ("LuminanceSmoothing", |p| &mut p.noise_luminance, 0.0, 100.0),
-    ("LuminanceNoiseReductionDetail", |p| &mut p.noise_luminance_detail, 0.0, 100.0),
-    ("ColorNoiseReduction", |p| &mut p.noise_color, 0.0, 100.0),
-    ("ColorNoiseReductionDetail", |p| &mut p.noise_color_detail, 0.0, 100.0),
-    ("GrainAmount", |p| &mut p.grain_amount, 0.0, 100.0),
-    ("GrainSize", |p| &mut p.grain_size, 0.0, 100.0),
-    ("GrainFrequency", |p| &mut p.grain_roughness, 0.0, 100.0),
-    ("PostCropVignetteAmount", |p| &mut p.vignette_amount, -100.0, 100.0),
-    ("PostCropVignetteMidpoint", |p| &mut p.vignette_midpoint, 0.0, 100.0),
-    ("PostCropVignetteRoundness", |p| &mut p.vignette_roundness, -100.0, 100.0),
-    ("PostCropVignetteFeather", |p| &mut p.vignette_feather, 0.0, 100.0),
-    ("PostCropVignetteHighlightContrast", |p| &mut p.vignette_highlights, 0.0, 100.0),
+    ("SplitToningShadowHue", |p| &mut p.grade_shadows.hue, 0.0, 360.0, "gradeShadows"),
+    ("SplitToningShadowSaturation", |p| &mut p.grade_shadows.sat, 0.0, 100.0, "gradeShadows"),
+    ("ColorGradeShadowLum", |p| &mut p.grade_shadows.lum, -100.0, 100.0, "gradeShadows"),
+    ("ColorGradeMidtoneHue", |p| &mut p.grade_midtones.hue, 0.0, 360.0, "gradeMidtones"),
+    ("ColorGradeMidtoneSat", |p| &mut p.grade_midtones.sat, 0.0, 100.0, "gradeMidtones"),
+    ("ColorGradeMidtoneLum", |p| &mut p.grade_midtones.lum, -100.0, 100.0, "gradeMidtones"),
+    ("SplitToningHighlightHue", |p| &mut p.grade_highlights.hue, 0.0, 360.0, "gradeHighlights"),
+    ("SplitToningHighlightSaturation", |p| &mut p.grade_highlights.sat, 0.0, 100.0, "gradeHighlights"),
+    ("ColorGradeHighlightLum", |p| &mut p.grade_highlights.lum, -100.0, 100.0, "gradeHighlights"),
+    ("ColorGradeGlobalHue", |p| &mut p.grade_global.hue, 0.0, 360.0, "gradeGlobal"),
+    ("ColorGradeGlobalSat", |p| &mut p.grade_global.sat, 0.0, 100.0, "gradeGlobal"),
+    ("ColorGradeGlobalLum", |p| &mut p.grade_global.lum, -100.0, 100.0, "gradeGlobal"),
+    ("ColorGradeBlending", |p| &mut p.grade_blending, 0.0, 100.0, "gradeBlending"),
+    ("SplitToningBalance", |p| &mut p.grade_balance, -100.0, 100.0, "gradeBalance"),
+    ("Sharpness", |p| &mut p.sharpen_amount, 0.0, 150.0, "sharpenAmount"),
+    ("SharpenRadius", |p| &mut p.sharpen_radius, 0.5, 3.0, "sharpenRadius"),
+    ("SharpenDetail", |p| &mut p.sharpen_detail, 0.0, 100.0, "sharpenDetail"),
+    ("SharpenEdgeMasking", |p| &mut p.sharpen_masking, 0.0, 100.0, "sharpenMasking"),
+    ("LuminanceSmoothing", |p| &mut p.noise_luminance, 0.0, 100.0, "noiseLuminance"),
+    ("LuminanceNoiseReductionDetail", |p| &mut p.noise_luminance_detail, 0.0, 100.0, "noiseLuminanceDetail"),
+    ("ColorNoiseReduction", |p| &mut p.noise_color, 0.0, 100.0, "noiseColor"),
+    ("ColorNoiseReductionDetail", |p| &mut p.noise_color_detail, 0.0, 100.0, "noiseColorDetail"),
+    ("GrainAmount", |p| &mut p.grain_amount, 0.0, 100.0, "grainAmount"),
+    ("GrainSize", |p| &mut p.grain_size, 0.0, 100.0, "grainSize"),
+    ("GrainFrequency", |p| &mut p.grain_roughness, 0.0, 100.0, "grainRoughness"),
+    ("PostCropVignetteAmount", |p| &mut p.vignette_amount, -100.0, 100.0, "vignetteAmount"),
+    ("PostCropVignetteMidpoint", |p| &mut p.vignette_midpoint, 0.0, 100.0, "vignetteMidpoint"),
+    ("PostCropVignetteRoundness", |p| &mut p.vignette_roundness, -100.0, 100.0, "vignetteRoundness"),
+    ("PostCropVignetteFeather", |p| &mut p.vignette_feather, 0.0, 100.0, "vignetteFeather"),
+    ("PostCropVignetteHighlightContrast", |p| &mut p.vignette_highlights, 0.0, 100.0, "vignetteHighlights"),
 ];
 
 type Curve = fn(&mut CameraRaw) -> &mut Vec<[f32; 2]>;
-const CURVES: &[(&str, Curve)] = &[
-    ("ToneCurvePV2012", |p| &mut p.point_curve),
-    ("ToneCurvePV2012Red", |p| &mut p.point_curve_red),
-    ("ToneCurvePV2012Green", |p| &mut p.point_curve_green),
-    ("ToneCurvePV2012Blue", |p| &mut p.point_curve_blue),
+const CURVES: &[(&str, Curve, &str)] = &[
+    ("ToneCurvePV2012", |p| &mut p.point_curve, "pointCurve"),
+    ("ToneCurvePV2012Red", |p| &mut p.point_curve_red, "pointCurveRed"),
+    ("ToneCurvePV2012Green", |p| &mut p.point_curve_green, "pointCurveGreen"),
+    ("ToneCurvePV2012Blue", |p| &mut p.point_curve_blue, "pointCurveBlue"),
 ];
+const STYLE_KEY: &str = "vignetteStyle";
+
+/// Every PhotoCraft setting a Camera Raw settings file can carry, in file order.
+pub fn supported_fields() -> Vec<&'static str> {
+    let mut v: Vec<&'static str> = Vec::new();
+    for key in SCALARS.iter().map(|s| s.4).chain([STYLE_KEY]).chain(CURVES.iter().map(|c| c.2)) {
+        if !v.contains(&key) {
+            v.push(key);
+        }
+    }
+    v
+}
 
 const STYLES: &[(&str, &str)] = &[("1", "highlightPriority"), ("2", "colorPriority"), ("3", "paintOverlay")];
 
@@ -148,6 +166,41 @@ pub struct LoadReport {
     /// `crs:` settings without a PhotoCraft control (set to something other than their neutral
     /// value), or with an unusable value, in file order.
     pub ignored: Vec<String>,
+    /// The PhotoCraft settings (`CameraRaw` JSON keys) the file set, each once, in file order.
+    pub fields: Vec<&'static str>,
+    /// A preset's `crs:Name` and `crs:Group` (the default language), when present.
+    pub name: Option<String>,
+    pub group: Option<String>,
+}
+
+impl LoadReport {
+    fn applied(&mut self, key: &'static str) {
+        self.applied += 1;
+        if !self.fields.contains(&key) {
+            self.fields.push(key);
+        }
+    }
+}
+
+/// Longest preset name or group read from a file, in characters.
+const MAX_LABEL_CHARS: usize = 255;
+
+/// A `crs:Name` / `crs:Group` value: its `rdf:Alt` item in the default language (else the
+/// first), or the element's own text. Trimmed and bounded; `None` when empty.
+fn label(node: roxmltree::Node<'_, '_>) -> Option<String> {
+    let items: Vec<_> = node.descendants().filter(|n| n.is_element() && n.tag_name().namespace() == Some(RDF_NS) && n.tag_name().name() == "li").collect();
+    let text = if items.is_empty() {
+        node.text()
+    } else {
+        let default = items.iter().find(|li| li.attributes().any(|a| a.name() == "lang" && a.value() == "x-default"));
+        default.or(items.first()).and_then(|li| li.text())
+    };
+    clean_label(text?)
+}
+
+fn clean_label(text: &str) -> Option<String> {
+    let text: String = text.trim().chars().filter(|c| !c.is_control()).take(MAX_LABEL_CHARS).collect();
+    (!text.is_empty()).then_some(text)
 }
 
 fn number(s: &str) -> Option<f32> {
@@ -189,11 +242,11 @@ fn neutral(name: &str, value: &str) -> bool {
 }
 
 fn apply(params: &mut CameraRaw, report: &mut LoadReport, name: &str, value: &str) {
-    if let Some((_, field, lo, hi)) = SCALARS.iter().find(|(n, ..)| *n == name) {
+    if let Some((_, field, lo, hi, key)) = SCALARS.iter().find(|(n, ..)| *n == name) {
         match number(value) {
             Some(v) => {
                 *field(params) = v.clamp(*lo, *hi);
-                report.applied += 1;
+                report.applied(key);
             }
             None => report.ignored.push(name.to_string()),
         }
@@ -201,9 +254,14 @@ fn apply(params: &mut CameraRaw, report: &mut LoadReport, name: &str, value: &st
         match STYLES.iter().find(|(n, _)| *n == value.trim()) {
             Some((_, style)) => {
                 params.vignette_style = (*style).into();
-                report.applied += 1;
+                report.applied(STYLE_KEY);
             }
             None => report.ignored.push(name.to_string()),
+        }
+    } else if name == "Name" || name == "Group" {
+        let slot = if name == "Name" { &mut report.name } else { &mut report.group };
+        if slot.is_none() {
+            *slot = clean_label(value);
         }
     } else if !METADATA.contains(&name) && !neutral(name, value) {
         report.ignored.push(name.to_string());
@@ -231,13 +289,18 @@ pub fn load(params: &mut CameraRaw, bytes: &[u8]) -> Result<LoadReport, String> 
         for c in desc.children().filter(|c| c.is_element() && c.tag_name().namespace() == Some(CRS_NS)) {
             found = true;
             let name = c.tag_name().name();
-            if let Some((_, field)) = CURVES.iter().find(|(n, _)| *n == name) {
+            if let Some((_, field, key)) = CURVES.iter().find(|(n, ..)| *n == name) {
                 match curve(c) {
                     Some(points) => {
                         *field(&mut next) = points;
-                        report.applied += 1;
+                        report.applied(key);
                     }
                     None => report.ignored.push(name.to_string()),
+                }
+            } else if name == "Name" || name == "Group" {
+                let slot = if name == "Name" { &mut report.name } else { &mut report.group };
+                if slot.is_none() {
+                    *slot = label(c);
                 }
             } else if c.children().any(|g| g.is_element()) {
                 // Structured settings (masks, looks, lens profiles…) have no counterpart.
@@ -267,14 +330,40 @@ fn escape(s: &str) -> String {
 
 /// Write `params` as a Camera Raw settings file Photoshop's Load Settings… reads.
 pub fn save(params: &CameraRaw) -> String {
+    write(params, |_| true, None)
+}
+
+/// Write a Camera Raw preset holding only the settings named in `fields` (`CameraRaw` JSON keys,
+/// see [`supported_fields`]; others are skipped), with its name and optional group, as Camera
+/// Raw's Presets panel exports one.
+pub fn save_preset(params: &CameraRaw, fields: &[&str], name: &str, group: Option<&str>) -> String {
+    write(params, |key| fields.contains(&key), Some((name, group)))
+}
+
+/// A stable `crs:UUID` for a preset (32 upper-case hex digits), from its name and settings.
+fn preset_uuid(name: &str, body: &str) -> String {
+    let fnv = |seed: u64| name.bytes().chain([0]).chain(body.bytes()).fold(seed, |h, b| (h ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3));
+    format!("{:016X}{:016X}", fnv(0xcbf2_9ce4_8422_2325), fnv(0x6c62_272e_07bb_0142))
+}
+
+fn alt(tag: &str, text: &str) -> String {
+    format!("   <crs:{tag}>\n    <rdf:Alt>\n     <rdf:li xml:lang=\"x-default\">{}</rdf:li>\n    </rdf:Alt>\n   </crs:{tag}>\n", escape(text))
+}
+
+fn write(params: &CameraRaw, keep: impl Fn(&str) -> bool, preset: Option<(&str, Option<&str>)>) -> String {
     let mut p = params.clone();
     let wb = if p.temperature != 0.0 || p.tint != 0.0 { "Custom" } else { "As Shot" };
     let mut out = String::from(
         "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"PhotoCraft\">\n <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n  <rdf:Description rdf:about=\"\"\n    xmlns:crs=\"http://ns.adobe.com/camera-raw-settings/1.0/\"\n",
     );
-    out.push_str("   crs:Version=\"18.4\"\n   crs:ProcessVersion=\"15.4\"\n");
-    out.push_str(&format!("   crs:WhiteBalance=\"{wb}\"\n"));
-    for (name, field, lo, _) in SCALARS {
+    let mut settings = String::new();
+    if keep("temperature") || keep("tint") {
+        settings.push_str(&format!("   crs:WhiteBalance=\"{wb}\"\n"));
+    }
+    for (name, field, lo, _, key) in SCALARS {
+        if !keep(key) {
+            continue;
+        }
         let v = *field(&mut p);
         // Exposure has two decimals in Camera Raw, the sharpening radius one; the rest are levels.
         let text = match *name {
@@ -283,12 +372,31 @@ pub fn save(params: &CameraRaw) -> String {
             _ if *lo < 0.0 => signed(v.round(), 0),
             _ => format!("{:.0}", v.round()),
         };
-        out.push_str(&format!("   crs:{name}=\"{text}\"\n"));
+        settings.push_str(&format!("   crs:{name}=\"{text}\"\n"));
     }
-    let style = STYLES.iter().find(|(_, s)| *s == p.vignette_style).map_or("1", |(n, _)| n);
-    out.push_str(&format!("   crs:PostCropVignetteStyle=\"{}\"\n", escape(style)));
-    out.push_str("   crs:ToneCurveName2012=\"Custom\"\n   crs:HasSettings=\"True\">\n");
-    for (name, field) in CURVES {
+    if keep(STYLE_KEY) {
+        let style = STYLES.iter().find(|(_, s)| *s == p.vignette_style).map_or("1", |(n, _)| n);
+        settings.push_str(&format!("   crs:PostCropVignetteStyle=\"{}\"\n", escape(style)));
+    }
+    if keep("pointCurve") {
+        settings.push_str("   crs:ToneCurveName2012=\"Custom\"\n");
+    }
+    out.push_str("   crs:Version=\"18.4\"\n   crs:ProcessVersion=\"15.4\"\n");
+    if let Some((name, _)) = preset {
+        out.push_str(&format!("   crs:PresetType=\"Normal\"\n   crs:UUID=\"{}\"\n   crs:SupportsAmount=\"False\"\n", preset_uuid(name, &settings)));
+    }
+    out.push_str(&settings);
+    out.push_str("   crs:HasSettings=\"True\">\n");
+    if let Some((name, group)) = preset {
+        out.push_str(&alt("Name", name));
+        if let Some(group) = group {
+            out.push_str(&alt("Group", group));
+        }
+    }
+    for (name, field, key) in CURVES {
+        if !keep(key) {
+            continue;
+        }
         let points = field(&mut p);
         let points = if points.is_empty() { vec![[0.0, 0.0], [255.0, 255.0]] } else { points.clone() };
         out.push_str(&format!("   <crs:{name}>\n    <rdf:Seq>\n"));
@@ -394,7 +502,7 @@ mod tests {
             <crs:Clarity2012>abc</crs:Clarity2012></rdf:Description></rdf:RDF></x:xmpmeta>"#;
         let r = load(&mut p, xmp).unwrap();
         assert_eq!((p.exposure, p.contrast, p.clarity), (-5.0, 40.0, 0.0));
-        assert_eq!(r, LoadReport { applied: 1, ignored: vec!["Clarity2012".into()] });
+        assert_eq!(r, LoadReport { applied: 1, ignored: vec!["Clarity2012".into()], fields: vec!["exposure"], ..Default::default() });
     }
 
     #[test]
@@ -419,5 +527,59 @@ mod tests {
         let r = load(&mut p, xmp).unwrap();
         assert_eq!(p, before);
         assert_eq!(r.ignored, vec!["Contrast2012".to_string(), "ToneCurvePV2012".to_string()]);
+    }
+
+    #[test]
+    fn supported_fields_are_camera_raw_settings() {
+        let keys = serde_json::to_value(CameraRaw::default()).unwrap();
+        let fields = supported_fields();
+        for f in &fields {
+            assert!(keys.get(f).is_some(), "{f}");
+        }
+        // Every user setting is carried; only the preview bookkeeping isn't.
+        let missing: Vec<_> = keys.as_object().unwrap().keys().filter(|k| !fields.contains(&k.as_str())).cloned().collect();
+        assert_eq!(missing, ["encodingGamma", "pixelScale", "seed"]);
+    }
+
+    #[test]
+    fn a_preset_round_trips_only_its_settings_with_name_and_group() {
+        let p =
+            CameraRaw { exposure: -0.5, contrast: 25.0, clarity: 40.0, point_curve: vec![[0.0, 0.0], [100.0, 140.0], [255.0, 255.0]], ..CameraRaw::default() };
+        let text = save_preset(&p, &["exposure", "pointCurve", "hslHue"], "Warm & <bright>", Some("Mine"));
+        assert!(text.contains("crs:PresetType=\"Normal\"") && text.contains("Warm &amp; &lt;bright&gt;"), "{text}");
+        assert!(!text.contains("Contrast2012") && !text.contains("Clarity2012") && !text.contains("WhiteBalance"), "{text}");
+        let mut back = CameraRaw { contrast: -10.0, ..CameraRaw::default() };
+        let r = load(&mut back, text.as_bytes()).unwrap();
+        assert!(r.ignored.is_empty(), "{:?}", r.ignored);
+        assert_eq!(r.fields, ["exposure", "hslHue", "pointCurve"]);
+        assert_eq!((r.name.as_deref(), r.group.as_deref()), (Some("Warm & <bright>"), Some("Mine")));
+        assert_eq!((back.exposure, back.contrast, back.clarity), (-0.5, -10.0, 0.0));
+        assert_eq!(back.point_curve, p.point_curve);
+        // The same preset always gets the same UUID; another name gets another.
+        assert_eq!(text, save_preset(&p, &["exposure", "pointCurve", "hslHue"], "Warm & <bright>", Some("Mine")));
+        assert_ne!(preset_uuid("a", ""), preset_uuid("b", ""));
+        // A settings file is not a preset: no name.
+        let r = load(&mut back, save(&p).as_bytes()).unwrap();
+        assert_eq!((r.name, r.group), (None, None));
+        assert_eq!(r.fields.len(), supported_fields().len());
+    }
+
+    #[test]
+    fn preset_names_are_read_from_attributes_and_alternatives_and_bounded() {
+        let long = "n".repeat(400);
+        let xmp = format!(
+            r#"<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description
+            xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/" crs:Group="  Attr group " crs:Exposure2012="+1">
+            <crs:Name><rdf:Alt><rdf:li xml:lang="de">Warm</rdf:li><rdf:li xml:lang="x-default">{long}</rdf:li></rdf:Alt></crs:Name>
+            </rdf:Description></rdf:RDF>"#
+        );
+        let r = load(&mut CameraRaw::default(), xmp.as_bytes()).unwrap();
+        assert_eq!(r.name.unwrap().chars().count(), MAX_LABEL_CHARS);
+        assert_eq!(r.group.as_deref(), Some("Attr group"));
+        let xmp = br#"<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description
+            xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/" crs:Name=" &#10; "><crs:Group><rdf:Alt><rdf:li>Only</rdf:li></rdf:Alt></crs:Group>
+            </rdf:Description></rdf:RDF>"#;
+        let r = load(&mut CameraRaw::default(), xmp).unwrap();
+        assert_eq!((r.name, r.group.as_deref(), r.applied), (None, Some("Only"), 0));
     }
 }

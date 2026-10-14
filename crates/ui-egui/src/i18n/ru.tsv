@@ -3110,3 +3110,27 @@ curves	Smooth	Сгладить
 	Gray Value (Median)	Уровень серого (медиана)
 	Integrated Density	Интегральная плотность
 	Length	Длина
+
+# Camera Raw › Presets panel
+	Add to Favorites	Добавить в избранное
+	Applied Camera Raw preset {name}	Применён набор Camera Raw {name}
+	Check All	Отметить все
+	Check None	Снять все
+	Choose at least one group of settings for the preset	Выберите для набора хотя бы одну группу настроек
+	Create Preset	Создать набор
+	Create Preset…	Создать набор…
+	Favorites	Избранное
+	Import Presets…	Импортировать наборы…
+	Imported Camera Raw preset {name}	Импортирован набор Camera Raw {name}
+	Move to Group	Переместить в группу
+	New Group…	Новая группа…
+	No presets match.	Нет подходящих наборов.
+	No presets yet. Use + to save the current settings as a preset.	Наборов пока нет. Нажмите +, чтобы сохранить текущие настройки как набор.
+	Preset name	Имя набора
+	Remove from Favorites	Удалить из избранного
+	Search presets	Поиск наборов
+	Settings: {sections}	Настройки: {sections}
+	Update with Current Settings	Обновить текущими настройками
+	not a Camera Raw preset file	это не файл набора Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Импортирован набор Camera Raw {name} (не поддерживается настроек: {n})
+	No Camera Raw preset named {name}	Нет набора Camera Raw с именем {name}

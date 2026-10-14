@@ -3904,3 +3904,27 @@ curves	Smooth	Vloeiend maken
 	Sent to {printer}	Verzonden naar {printer}
 	set in Print Settings…	instellen in de afdrukinstellingen…
 	ICO is limited to 256 × 256 pixels	ICO is beperkt tot 256 × 256 pixels
+
+# Camera Raw › Presets panel
+	Add to Favorites	Toevoegen aan favorieten
+	Applied Camera Raw preset {name}	Camera Raw-voorinstelling {name} toegepast
+	Check All	Alles aanvinken
+	Check None	Niets aanvinken
+	Choose at least one group of settings for the preset	Kies ten minste één groep instellingen voor de voorinstelling
+	Create Preset	Voorinstelling maken
+	Create Preset…	Voorinstelling maken…
+	Favorites	Favorieten
+	Import Presets…	Voorinstellingen importeren…
+	Imported Camera Raw preset {name}	Camera Raw-voorinstelling {name} geïmporteerd
+	Move to Group	Naar groep verplaatsen
+	New Group…	Nieuwe groep…
+	No presets match.	Geen overeenkomende voorinstellingen.
+	No presets yet. Use + to save the current settings as a preset.	Nog geen voorinstellingen. Gebruik + om de huidige instellingen als voorinstelling op te slaan.
+	Preset name	Naam van voorinstelling
+	Remove from Favorites	Verwijderen uit favorieten
+	Search presets	Voorinstellingen zoeken
+	Settings: {sections}	Instellingen: {sections}
+	Update with Current Settings	Bijwerken met huidige instellingen
+	not a Camera Raw preset file	geen Camera Raw-voorinstellingsbestand
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera Raw-voorinstelling {name} geïmporteerd ({n} instellingen niet ondersteund)
+	No Camera Raw preset named {name}	Geen Camera Raw-voorinstelling met de naam {name}

@@ -3843,3 +3843,27 @@ curves	Smooth	Згладити
 	Sent to {printer}	Надіслано на {printer}
 	set in Print Settings…	задається в параметрах друку…
 	ICO is limited to 256 × 256 pixels	ICO обмежено розміром 256 × 256 пікселів
+
+# Camera Raw › Presets panel
+	Add to Favorites	Додати до вибраного
+	Applied Camera Raw preset {name}	Застосовано набір Camera Raw {name}
+	Check All	Позначити всі
+	Check None	Зняти всі
+	Choose at least one group of settings for the preset	Виберіть для набору хоча б одну групу налаштувань
+	Create Preset	Створити набір
+	Create Preset…	Створити набір…
+	Favorites	Вибране
+	Import Presets…	Імпортувати набори…
+	Imported Camera Raw preset {name}	Імпортовано набір Camera Raw {name}
+	Move to Group	Перемістити до групи
+	New Group…	Нова група…
+	No presets match.	Немає відповідних наборів.
+	No presets yet. Use + to save the current settings as a preset.	Наборів ще немає. Натисніть +, щоб зберегти поточні налаштування як набір.
+	Preset name	Назва набору
+	Remove from Favorites	Видалити з вибраного
+	Search presets	Пошук наборів
+	Settings: {sections}	Налаштування: {sections}
+	Update with Current Settings	Оновити поточними налаштуваннями
+	not a Camera Raw preset file	це не файл набору Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Імпортовано набір Camera Raw {name} (не підтримується налаштувань: {n})
+	No Camera Raw preset named {name}	Немає набору Camera Raw з назвою {name}

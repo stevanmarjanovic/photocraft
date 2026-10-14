@@ -3934,3 +3934,27 @@ layerLabel	No Color	Sem cor
 	Sent to {printer}	Enviado para {printer}
 	set in Print Settings…	definido nas configurações de impressão…
 	ICO is limited to 256 × 256 pixels	ICO é limitado a 256 × 256 pixels
+
+# Camera Raw › Presets panel
+	Add to Favorites	Adicionar aos favoritos
+	Applied Camera Raw preset {name}	Predefinição do Camera Raw {name} aplicada
+	Check All	Marcar tudo
+	Check None	Desmarcar tudo
+	Choose at least one group of settings for the preset	Escolha pelo menos um grupo de configurações para a predefinição
+	Create Preset	Criar predefinição
+	Create Preset…	Criar predefinição…
+	Favorites	Favoritos
+	Import Presets…	Importar predefinições…
+	Imported Camera Raw preset {name}	Predefinição do Camera Raw {name} importada
+	Move to Group	Mover para o grupo
+	New Group…	Novo grupo…
+	No presets match.	Nenhuma predefinição corresponde.
+	No presets yet. Use + to save the current settings as a preset.	Ainda não há predefinições. Use + para salvar as configurações atuais como predefinição.
+	Preset name	Nome da predefinição
+	Remove from Favorites	Remover dos favoritos
+	Search presets	Pesquisar predefinições
+	Settings: {sections}	Configurações: {sections}
+	Update with Current Settings	Atualizar com as configurações atuais
+	not a Camera Raw preset file	não é um arquivo de predefinição do Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Predefinição do Camera Raw {name} importada ({n} configurações sem suporte)
+	No Camera Raw preset named {name}	Nenhuma predefinição do Camera Raw chamada {name}

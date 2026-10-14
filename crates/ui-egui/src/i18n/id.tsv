@@ -3133,3 +3133,27 @@ curves	Smooth	Haluskan
 	Sent to {printer}	Dikirim ke {printer}
 	set in Print Settings…	diatur di Pengaturan Cetak…
 	ICO is limited to 256 × 256 pixels	ICO dibatasi hingga 256 × 256 piksel
+
+# Camera Raw › Presets panel
+	Add to Favorites	Tambahkan ke Favorit
+	Applied Camera Raw preset {name}	Preset Camera Raw {name} diterapkan
+	Check All	Centang Semua
+	Check None	Hapus Centang Semua
+	Choose at least one group of settings for the preset	Pilih setidaknya satu grup pengaturan untuk preset
+	Create Preset	Buat Preset
+	Create Preset…	Buat Preset…
+	Favorites	Favorit
+	Import Presets…	Impor Preset…
+	Imported Camera Raw preset {name}	Preset Camera Raw {name} diimpor
+	Move to Group	Pindahkan ke Grup
+	New Group…	Grup Baru…
+	No presets match.	Tidak ada preset yang cocok.
+	No presets yet. Use + to save the current settings as a preset.	Belum ada preset. Gunakan + untuk menyimpan pengaturan saat ini sebagai preset.
+	Preset name	Nama preset
+	Remove from Favorites	Hapus dari Favorit
+	Search presets	Cari preset
+	Settings: {sections}	Pengaturan: {sections}
+	Update with Current Settings	Perbarui dengan Pengaturan Saat Ini
+	not a Camera Raw preset file	bukan file preset Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Preset Camera Raw {name} diimpor ({n} pengaturan tidak didukung)
+	No Camera Raw preset named {name}	Tidak ada preset Camera Raw bernama {name}

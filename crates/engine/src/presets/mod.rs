@@ -89,6 +89,8 @@ pub struct PresetState {
     pub layer_defaults: BTreeMap<String, Value>,
     /// Swatches panel library.
     pub swatches: Vec<Group<swatches::Swatch>>,
+    /// Camera Raw › Presets (see [`crate::camera_raw_preset_cmds`]).
+    pub camera_raw: Vec<Group<crate::camera_raw_preset_cmds::CameraRawPreset>>,
     /// Bumped on every preset change (UIs key thumbnail caches on it).
     pub rev: u64,
 }
@@ -108,6 +110,7 @@ impl Default for PresetState {
             clone: Default::default(),
             layer_defaults: BTreeMap::new(),
             swatches: swatches::builtin(),
+            camera_raw: crate::camera_raw_preset_cmds::builtin(),
             rev: 0,
         }
     }
@@ -139,6 +142,9 @@ struct Persisted {
     #[serde(default)]
     layer_defaults: Option<BTreeMap<String, Value>>,
     swatches: Option<Vec<Group<swatches::Swatch>>>,
+    // Read entry by entry (`camera_raw_preset_cmds::load`).
+    #[serde(default)]
+    camera_raw: Option<Value>,
 }
 
 impl PresetState {
@@ -156,6 +162,7 @@ impl PresetState {
             custom_shapes: Some(s.edit_state.custom_shapes.clone()),
             layer_defaults: Some(self.layer_defaults.clone()),
             swatches: Some(self.swatches.clone()),
+            camera_raw: Some(json!(self.camera_raw)),
         };
         serde_json::to_value(p).unwrap_or(Value::Null)
     }
@@ -201,6 +208,9 @@ impl Session {
             // A hand-edited preferences file can't make the library unbounded.
             crate::swatch_cmds::cap_library(&mut g);
             self.presets.swatches = g;
+        }
+        if let Some(c) = p.camera_raw {
+            self.presets.camera_raw = crate::camera_raw_preset_cmds::load(c);
         }
         self.presets.rev += 1;
     }

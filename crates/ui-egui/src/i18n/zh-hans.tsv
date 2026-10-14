@@ -2754,3 +2754,28 @@ curves	Smooth	平滑
 	Sent to {printer}	已发送到 {printer}
 	set in Print Settings…	在打印设置中设置…
 	ICO is limited to 256 × 256 pixels	ICO 最大为 256 × 256 像素
+
+# Camera Raw › Presets panel
+	Add to Favorites	添加到收藏夹
+	Applied Camera Raw preset {name}	已应用 Camera Raw 预设 {name}
+	Check All	全选
+	Check None	全不选
+	Choose at least one group of settings for the preset	请为预设至少选择一组设置
+	Create Preset	创建预设
+	Create Preset…	创建预设…
+	Favorites	收藏夹
+	Import Presets…	导入预设…
+	Imported Camera Raw preset {name}	已导入 Camera Raw 预设 {name}
+	Move to Group	移到组
+	New Group…	新建组…
+	No presets match.	没有匹配的预设。
+	No presets yet. Use + to save the current settings as a preset.	还没有预设。使用 + 将当前设置存储为预设。
+	Preset name	预设名称
+	Remove from Favorites	从收藏夹中移去
+	Search presets	搜索预设
+	Settings	设置
+	Settings: {sections}	设置：{sections}
+	Update with Current Settings	使用当前设置更新
+	not a Camera Raw preset file	不是 Camera Raw 预设文件
+	Imported Camera Raw preset {name} ({n} settings not supported)	已导入 Camera Raw 预设 {name}（{n} 项设置不受支持）
+	No Camera Raw preset named {name}	没有名为 {name} 的 Camera Raw 预设

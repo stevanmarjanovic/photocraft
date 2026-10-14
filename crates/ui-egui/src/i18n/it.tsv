@@ -4107,3 +4107,27 @@ navigator	Zoom	Zoom
 	Sent to {printer}	Inviato a {printer}
 	set in Print Settings…	impostato nelle impostazioni di stampa…
 	ICO is limited to 256 × 256 pixels	ICO è limitato a 256 × 256 pixel
+
+# Camera Raw › Presets panel
+	Add to Favorites	Aggiungi ai preferiti
+	Applied Camera Raw preset {name}	Predefinito Camera Raw {name} applicato
+	Check All	Seleziona tutto
+	Check None	Deseleziona tutto
+	Choose at least one group of settings for the preset	Scegli almeno un gruppo di impostazioni per il predefinito
+	Create Preset	Crea predefinito
+	Create Preset…	Crea predefinito…
+	Favorites	Preferiti
+	Import Presets…	Importa predefiniti…
+	Imported Camera Raw preset {name}	Predefinito Camera Raw {name} importato
+	Move to Group	Sposta nel gruppo
+	New Group…	Nuovo gruppo…
+	No presets match.	Nessun predefinito corrispondente.
+	No presets yet. Use + to save the current settings as a preset.	Ancora nessun predefinito. Usa + per salvare le impostazioni correnti come predefinito.
+	Preset name	Nome del predefinito
+	Remove from Favorites	Rimuovi dai preferiti
+	Search presets	Cerca predefiniti
+	Settings: {sections}	Impostazioni: {sections}
+	Update with Current Settings	Aggiorna con le impostazioni correnti
+	not a Camera Raw preset file	non è un file di predefinito Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Predefinito Camera Raw {name} importato ({n} impostazioni non supportate)
+	No Camera Raw preset named {name}	Nessun predefinito Camera Raw denominato {name}

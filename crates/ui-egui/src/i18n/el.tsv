@@ -3842,3 +3842,27 @@ curves	Smooth	Εξομάλυνση
 	Sent to {printer}	Στάλθηκε στον {printer}
 	set in Print Settings…	ορίζεται στις ρυθμίσεις εκτύπωσης…
 	ICO is limited to 256 × 256 pixels	Το ICO περιορίζεται σε 256 × 256 εικονοστοιχεία
+
+# Camera Raw › Presets panel
+	Add to Favorites	Προσθήκη στα αγαπημένα
+	Applied Camera Raw preset {name}	Εφαρμόστηκε η προεπιλογή Camera Raw {name}
+	Check All	Επιλογή όλων
+	Check None	Καμία επιλογή
+	Choose at least one group of settings for the preset	Επιλέξτε τουλάχιστον μία ομάδα ρυθμίσεων για την προεπιλογή
+	Create Preset	Δημιουργία προεπιλογής
+	Create Preset…	Δημιουργία προεπιλογής…
+	Favorites	Αγαπημένα
+	Import Presets…	Εισαγωγή προεπιλογών…
+	Imported Camera Raw preset {name}	Εισήχθη η προεπιλογή Camera Raw {name}
+	Move to Group	Μετακίνηση σε ομάδα
+	New Group…	Νέα ομάδα…
+	No presets match.	Καμία προεπιλογή δεν ταιριάζει.
+	No presets yet. Use + to save the current settings as a preset.	Δεν υπάρχουν ακόμη προεπιλογές. Πατήστε + για να αποθηκεύσετε τις τρέχουσες ρυθμίσεις ως προεπιλογή.
+	Preset name	Όνομα προεπιλογής
+	Remove from Favorites	Αφαίρεση από τα αγαπημένα
+	Search presets	Αναζήτηση προεπιλογών
+	Settings: {sections}	Ρυθμίσεις: {sections}
+	Update with Current Settings	Ενημέρωση με τις τρέχουσες ρυθμίσεις
+	not a Camera Raw preset file	δεν είναι αρχείο προεπιλογής Camera Raw
+	Imported Camera Raw preset {name} ({n} settings not supported)	Εισήχθη η προεπιλογή Camera Raw {name} ({n} ρυθμίσεις δεν υποστηρίζονται)
+	No Camera Raw preset named {name}	Δεν υπάρχει προεπιλογή Camera Raw με όνομα {name}

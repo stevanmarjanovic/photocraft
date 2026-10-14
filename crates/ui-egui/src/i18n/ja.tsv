@@ -3821,3 +3821,27 @@ curves	Smooth	スムーズ
 	Reset All Locked Settings	ロックされた設定をすべて初期化
 	Copy Texture to Other Tools	テクスチャを他のツールにコピー
 	ICO is limited to 256 × 256 pixels	ICO は 256 × 256 ピクセルまでです
+
+# Camera Raw › Presets panel
+	Add to Favorites	お気に入りに追加
+	Applied Camera Raw preset {name}	Camera Raw プリセット {name} を適用しました
+	Check All	すべてチェック
+	Check None	すべてのチェックを外す
+	Choose at least one group of settings for the preset	プリセットに含める設定グループを 1 つ以上選択してください
+	Create Preset	プリセットを作成
+	Create Preset…	プリセットを作成…
+	Favorites	お気に入り
+	Import Presets…	プリセットを読み込み…
+	Imported Camera Raw preset {name}	Camera Raw プリセット {name} を読み込みました
+	Move to Group	グループに移動
+	New Group…	新規グループ…
+	No presets match.	一致するプリセットはありません。
+	No presets yet. Use + to save the current settings as a preset.	プリセットはまだありません。+ で現在の設定をプリセットとして保存できます。
+	Preset name	プリセット名
+	Remove from Favorites	お気に入りから削除
+	Search presets	プリセットを検索
+	Settings: {sections}	設定：{sections}
+	Update with Current Settings	現在の設定で更新
+	not a Camera Raw preset file	Camera Raw プリセットファイルではありません
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera Raw プリセット {name} を読み込みました（{n} 個の設定は未対応）
+	No Camera Raw preset named {name}	{name} という名前の Camera Raw プリセットはありません

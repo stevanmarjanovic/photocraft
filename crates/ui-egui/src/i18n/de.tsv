@@ -3142,3 +3142,28 @@ curves	Smooth	Glätten
 	Sent to {printer}	An {printer} gesendet
 	set in Print Settings…	in den Druckeinstellungen festlegen…
 	ICO is limited to 256 × 256 pixels	ICO ist auf 256 × 256 Pixel begrenzt
+
+# Camera Raw › Presets panel
+	Add to Favorites	Zu Favoriten hinzufügen
+	Applied Camera Raw preset {name}	Camera-Raw-Vorgabe {name} angewendet
+	Check All	Alle auswählen
+	Check None	Keine auswählen
+	Choose at least one group of settings for the preset	Wählen Sie mindestens eine Einstellungsgruppe für die Vorgabe
+	Create Preset	Vorgabe erstellen
+	Create Preset…	Vorgabe erstellen…
+	Favorites	Favoriten
+	Import Presets…	Vorgaben importieren…
+	Imported Camera Raw preset {name}	Camera-Raw-Vorgabe {name} importiert
+	Move to Group	In Gruppe verschieben
+	New Group…	Neue Gruppe…
+	No presets match.	Keine passenden Vorgaben.
+	No presets yet. Use + to save the current settings as a preset.	Noch keine Vorgaben. Mit + speichern Sie die aktuellen Einstellungen als Vorgabe.
+	Preset name	Name der Vorgabe
+	Remove from Favorites	Aus Favoriten entfernen
+	Search presets	Vorgaben suchen
+	Settings	Einstellungen
+	Settings: {sections}	Einstellungen: {sections}
+	Update with Current Settings	Mit aktuellen Einstellungen aktualisieren
+	not a Camera Raw preset file	keine Camera-Raw-Vorgabedatei
+	Imported Camera Raw preset {name} ({n} settings not supported)	Camera-Raw-Vorgabe {name} importiert ({n} Einstellungen nicht unterstützt)
+	No Camera Raw preset named {name}	Keine Camera-Raw-Vorgabe namens {name}
