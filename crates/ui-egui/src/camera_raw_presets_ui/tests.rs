@@ -160,3 +160,35 @@ fn the_presets_panel_draws_and_clicking_a_preset_applies_it() {
     assert_eq!(app.camera_raw.as_ref().unwrap().params.saturation, -100.0, "{}", app.ui.status);
     assert!(app.ui.status.contains("Mono"), "{}", app.ui.status);
 }
+
+/// Right-clicks the "Mono" preset row and reports whether Move to Group is disabled.
+fn move_to_group_disabled(extra_group: bool) -> bool {
+    use egui_kittest::kittest::{NodeT, Queryable};
+    let (mut app, _) = app_with(Vec::new());
+    let ctx = egui::Context::default();
+    set(&mut app, &ctx, json!({"saturation": -100}));
+    presets(&mut app, &ctx, json!({"create": {"name": "Mono", "sections": ["Color"]}})).unwrap();
+    if extra_group {
+        presets(&mut app, &ctx, json!({"create": {"name": "Warm", "group": "Looks", "sections": ["Color"]}})).unwrap();
+    }
+    presets(&mut app, &ctx, json!({"panel": "presets"})).unwrap();
+    let mut h = egui_kittest::Harness::builder().with_size(vec2(1360.0, 900.0)).build_ui_state(
+        |ui, app: &mut PhotocraftApp| {
+            if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
+                show(app, ui.ctx());
+            }
+        },
+        app,
+    );
+    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Pro);
+    h.run_steps(2);
+    h.get_by_label("Mono").click_secondary();
+    h.run_steps(2);
+    h.get_by_label_contains("Move to Group").accesskit_node().is_disabled()
+}
+
+#[test]
+fn move_to_group_is_disabled_without_another_group() {
+    assert!(move_to_group_disabled(false));
+    assert!(!move_to_group_disabled(true));
+}

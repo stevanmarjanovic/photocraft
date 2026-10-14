@@ -248,14 +248,19 @@ fn row(ui: &mut egui::Ui, view: &mut PresetsView, group: &str, p: &CameraRawPres
             view.rename = Some(Rename::Preset { group: group.into(), name: p.name.clone(), text: p.name.clone() });
             ui.close();
         }
-        ui.menu_button(tl!("Move to Group"), |ui| {
-            for to in groups.iter().filter(|g| **g != group) {
-                if ui.button(*to).clicked() {
-                    acts.push(Action::Command("cameraRaw.presets.edit", json!({"action":"move","group":group,"preset":p.name,"to":to})));
-                    ui.close();
+        let targets: Vec<&str> = groups.iter().copied().filter(|g| *g != group).collect();
+        if targets.is_empty() {
+            ui.add_enabled(false, egui::Button::new(tl!("Move to Group")));
+        } else {
+            ui.menu_button(tl!("Move to Group"), |ui| {
+                for to in targets {
+                    if ui.button(to).clicked() {
+                        acts.push(Action::Command("cameraRaw.presets.edit", json!({"action":"move","group":group,"preset":p.name,"to":to})));
+                        ui.close();
+                    }
                 }
-            }
-        });
+            });
+        }
         if ui.button(tl!("Export…")).clicked() {
             acts.push(Action::Export { group: group.into(), name: p.name.clone() });
             ui.close();
