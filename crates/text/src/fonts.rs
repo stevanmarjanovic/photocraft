@@ -771,12 +771,20 @@ pub(crate) fn system_font_dirs() -> Vec<std::path::PathBuf> {
         v.push(PathBuf::from("/Library/Fonts"));
         if let Some(h) = &home {
             v.push(h.join("Library/Fonts"));
+            // Adobe Fonts activated through Creative Cloud: registered with Core Text per login
+            // session, never copied into a font folder.
+            v.push(h.join("Library/Application Support/Adobe/CoreSync/plugins/livetype/.r"));
         }
     } else if cfg!(target_os = "windows") {
         let windir = std::env::var_os("WINDIR").map_or_else(|| PathBuf::from("C:\\Windows"), PathBuf::from);
         v.push(windir.join("Fonts"));
         if let Some(l) = std::env::var_os("LOCALAPPDATA") {
             v.push(PathBuf::from(l).join("Microsoft\\Windows\\Fonts"));
+        }
+        // Adobe Fonts activated through Creative Cloud: registered per login session, never
+        // copied into a font folder.
+        if let Some(a) = std::env::var_os("APPDATA") {
+            v.push(PathBuf::from(a).join("Adobe\\CoreSync\\plugins\\livetype\\.r"));
         }
     } else {
         v.push(PathBuf::from("/usr/share/fonts"));
@@ -901,6 +909,28 @@ mod tests {
         assert_eq!(super::localized_name("Arial", &names(&[("Arial", Some("en-GB")), ("Arial", Some("de-DE"))])), None);
         assert_eq!(super::localized_name("X", &names(&[("Y", None), ("  ", Some("ja-JP"))])), None);
         assert_eq!(super::localized_name("X", &[]), None);
+    }
+
+    #[test]
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    fn scans_adobe_fonts() {
+        let dirs = super::system_font_dirs();
+        assert!(dirs.iter().any(|d| d.ends_with("Adobe/CoreSync/plugins/livetype/.r")), "{dirs:?}");
+    }
+
+    /// Adobe Fonts stores its files under hidden, numbered names such as `.12345.otf`.
+    #[test]
+    fn collects_dot_prefixed_font_files() {
+        let dir = std::env::temp_dir().join(format!("photocraft-livetype-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(".12345.otf"), b"").unwrap();
+        std::fs::write(dir.join(".12346.ttf"), b"").unwrap();
+        std::fs::write(dir.join(".manifest"), b"").unwrap();
+        let mut files = Vec::new();
+        super::collect_font_files(&dir, 0, &mut files);
+        std::fs::remove_dir_all(&dir).unwrap();
+        files.sort();
+        assert_eq!(files, [dir.join(".12345.otf"), dir.join(".12346.ttf")]);
     }
 
     #[test]
