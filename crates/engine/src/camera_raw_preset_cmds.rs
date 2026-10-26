@@ -59,6 +59,7 @@ pub const SECTIONS: &[(&str, &[&str])] = &[
         "Detail",
         &["sharpenAmount", "sharpenRadius", "sharpenDetail", "sharpenMasking", "noiseLuminance", "noiseLuminanceDetail", "noiseColor", "noiseColorDetail"],
     ),
+    ("Calibration", &["shadowTint", "calibrationHue", "calibrationSat"]),
 ];
 
 /// A named subset of Camera Raw settings.

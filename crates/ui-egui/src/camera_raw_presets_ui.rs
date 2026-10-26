@@ -71,7 +71,7 @@ pub(crate) fn tabs(ui: &mut egui::Ui, view: &mut PresetsView) {
             let name = crate::i18n::tr_ctx(crate::i18n::current(), "cameraRaw", label);
             let selected = view.shown == presets;
             let response = widgets::pill_tab(ui, name, selected);
-            response.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, selected, name));
+            response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, selected, name));
             if response.clicked() {
                 view.shown = presets;
             }
@@ -90,7 +90,7 @@ pub(crate) fn panel(ui: &mut egui::Ui, view: &mut PresetsView, groups: &[Group<C
     }
     ui.horizontal(|ui| {
         let width = (ui.available_width() - 56.0).max(60.0);
-        widgets::text_field(ui, egui::Id::new("camera-raw-preset-search"), &mut view.filter, tl!("Search presets"), width, false);
+        widgets::text_field(ui, egui::Id::unique("camera-raw-preset-search"), &mut view.filter, tl!("Search presets"), width, false);
         if ui.button("+").on_hover_text(tl!("Create Preset…")).clicked() {
             let group = groups.first().map_or(USER_GROUP.to_string(), |g| g.name.clone());
             view.create = Some(CreateForm { focus: true, name: String::new(), group, sections: vec![true; SECTIONS.len()] });
@@ -131,7 +131,7 @@ pub(crate) fn panel(ui: &mut egui::Ui, view: &mut PresetsView, groups: &[Group<C
     let favorites: Vec<(&str, &CameraRawPreset)> = groups.iter().flat_map(|g| g.items.iter().filter(|p| p.favorite && matches(p)).map(|p| (g.name.as_str(), p))).collect();
     let group_names: Vec<&str> = groups.iter().map(|g| g.name.as_str()).collect();
     if !favorites.is_empty() {
-        header(ui, egui::Id::new("camera-raw-favorites"), tl!("Favorites"), |ui| {
+        header(ui, egui::Id::unique("camera-raw-favorites"), tl!("Favorites"), |ui| {
             for (group, p) in &favorites {
                 row(ui, view, group, p, &group_names, acts);
             }
@@ -155,7 +155,7 @@ pub(crate) fn panel(ui: &mut egui::Ui, view: &mut PresetsView, groups: &[Group<C
             }
             continue;
         }
-        let response = header(ui, egui::Id::new(("camera-raw-group", g.name.as_str())), &format!("{} ({})", g.name, g.items.len()), |ui| {
+        let response = header(ui, egui::Id::unique(("camera-raw-group", g.name.as_str())), &format!("{} ({})", g.name, g.items.len()), |ui| {
             for p in g.items.iter().filter(|p| matches(p)) {
                 row(ui, view, &g.name, p, &group_names, acts);
             }
@@ -180,7 +180,7 @@ fn header(ui: &mut egui::Ui, id: egui::Id, title: &str, body: impl FnOnce(&mut e
 /// A one-line name editor, focused when it appears: `Some(true)` when it loses focus holding a
 /// name (Enter or a click elsewhere), `Some(false)` on Escape or when left empty.
 fn name_field(ui: &mut egui::Ui, id: &str, text: &mut String, hint: &str) -> Option<bool> {
-    let id = egui::Id::new(id);
+    let id = egui::Id::unique(id);
     let r = widgets::text_field_ex(ui, id, text, hint, ui.available_width(), false, Some(255));
     let seen = id.with("focused");
     if ui.data_mut(|d| d.get_temp::<bool>(seen).is_none()) {
@@ -218,7 +218,7 @@ fn row(ui: &mut egui::Ui, view: &mut PresetsView, group: &str, p: &CameraRawPres
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 24.0), Sense::click());
     let current = view.applied.as_ref().is_some_and(|(g, n)| g == group && *n == p.name);
-    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, current, &p.name));
+    resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, current, &p.name));
     if ui.is_rect_visible(r) {
         if current {
             ui.painter().rect_filled(r, t.radius_sm, t.accent_soft);
@@ -276,7 +276,7 @@ fn row(ui: &mut egui::Ui, view: &mut PresetsView, group: &str, p: &CameraRawPres
 /// Create Preset: name, group and the sections to include. True when it closes.
 fn create_form(ui: &mut egui::Ui, form: &mut CreateForm, groups: &[Group<CameraRawPreset>], acts: &mut Vec<Action>) -> bool {
     widgets::section_label(ui, tl!("Create Preset"));
-    let name = widgets::text_field_ex(ui, egui::Id::new("camera-raw-create-name"), &mut form.name, tl!("Preset name"), ui.available_width(), false, Some(255));
+    let name = widgets::text_field_ex(ui, egui::Id::unique("camera-raw-create-name"), &mut form.name, tl!("Preset name"), ui.available_width(), false, Some(255));
     if std::mem::take(&mut form.focus) {
         name.request_focus();
     }
@@ -286,7 +286,7 @@ fn create_form(ui: &mut egui::Ui, form: &mut CreateForm, groups: &[Group<CameraR
     if options.is_empty() {
         options.push((USER_GROUP.to_string(), USER_GROUP));
     }
-    widgets::dropdown(ui, "camera-raw-create-group", &mut form.group, &options, ui.available_width().min(240.0));
+    widgets::dropdown(ui, "camera-raw-create-group", tl!("Group"), &mut form.group, &options, ui.available_width().min(240.0));
     ui.add_space(6.0);
     widgets::section_label(ui, tl!("Settings"));
     ui.horizontal(|ui| {

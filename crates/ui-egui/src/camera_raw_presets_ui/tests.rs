@@ -192,3 +192,17 @@ fn move_to_group_is_disabled_without_another_group() {
     assert!(move_to_group_disabled(false));
     assert!(!move_to_group_disabled(true));
 }
+
+#[test]
+fn applying_a_preset_can_be_undone_and_redone_in_the_dialog() {
+    let (mut app, _) = app_with(Vec::new());
+    let ctx = egui::Context::default();
+    set(&mut app, &ctx, json!({"exposure": 0.75}));
+    presets(&mut app, &ctx, json!({"create": {"name": "Bright", "sections": ["Light"]}})).unwrap();
+    set(&mut app, &ctx, json!({"exposure": -1.0}));
+    presets(&mut app, &ctx, json!({"apply": "Bright"})).unwrap();
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"undo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, -1.0);
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"redo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, 0.75);
+}
