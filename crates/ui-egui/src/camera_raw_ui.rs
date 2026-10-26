@@ -81,6 +81,9 @@ pub struct CameraRawDialog {
     raw_curve: Option<std::sync::Arc<Vec<[f32; 2]>>>,
     /// The proxy develop running on a worker ([`Self::request_render`]).
     pending: Option<std::sync::mpsc::Receiver<Result<ProxyFrame, String>>>,
+    /// A hover transition made the running proxy job obsolete. Let it finish before
+    /// starting another job, but never publish its stale preset.
+    stale_preset_preview: bool,
     /// The last worker failure the status bar shows, with the preview revision it failed on.
     preview_error: Option<(String, u64)>,
     /// The GPU develop, when the app may use one.
@@ -139,8 +142,28 @@ impl CameraRawDialog {
         result["vectorscopeRect"] = json!(self.scope.vectorscope_rect.map(|r| [r.left(), r.top(), r.right(), r.bottom()]));
         result["scopeRect"] = json!(self.scope.rect.map(|r| [r.left(), r.top(), r.right(), r.bottom()]));
         result["presets"] = json!({"panel": if self.presets.shown { "presets" } else { "edit" },
+            "previewing": self.presets.preview.as_ref().map(|p| json!({"group": p.group, "name": p.name})),
             "applied": self.presets.applied.as_ref().map(|(group, name)| json!({"group": group, "name": name}))});
         result
+    }
+
+    /// Settings for rendering only; saving, committing and editing use `params`.
+    pub(crate) fn preview_params(&self) -> &CameraRaw {
+        self.presets.preview.as_ref().map_or(&self.params, |p| &p.params)
+    }
+
+    pub(crate) fn invalidate_preset_preview(&mut self) {
+        self.dirty = true;
+        self.stale_preset_preview |= self.pending.is_some();
+    }
+
+    pub(crate) fn clear_preset_preview(&mut self) {
+        self.presets.controlled_preview = false;
+        if let Some(preview) = self.presets.preview.take()
+            && preview.params != self.params
+        {
+            self.invalidate_preset_preview();
+        }
     }
 
     /// The settings the dialog opened with (edits are validated against them).
@@ -151,6 +174,7 @@ impl CameraRawDialog {
     /// Replace the settings (a loaded file or an applied preset): re-renders, and drops the
     /// curve editor's selection when the curve changed.
     pub(crate) fn set_params(&mut self, next: CameraRaw) {
+        self.clear_preset_preview();
         if self.params.point_curve != next.point_curve {
             self.curve_state = Default::default();
         }
@@ -187,6 +211,7 @@ impl CameraRawDialog {
     pub(crate) fn render(&mut self, ctx: &egui::Context) {
         // A render still running on the worker has older settings than this one.
         self.pending = None;
+        self.stale_preset_preview = false;
         let frame = self.proxy_job().run();
         self.publish(ctx, frame);
         self.dirty = false;
@@ -197,7 +222,7 @@ impl CameraRawDialog {
             proxy: self.proxy.clone(),
             selection: self.selection.clone(),
             raw_curve: self.raw_curve.clone(),
-            params: self.params.clone(),
+            params: self.preview_params().clone(),
             float: self.float,
             size: (self.pw, self.ph),
             full_w: self.full_w,
@@ -273,6 +298,9 @@ impl CameraRawDialog {
             Err(std::sync::mpsc::TryRecvError::Disconnected) => Err("Camera Raw preview worker stopped".to_string()),
         };
         self.pending = None;
+        if std::mem::take(&mut self.stale_preset_preview) {
+            return Ok(());
+        }
         self.publish(ctx, frame?);
         Ok(())
     }
@@ -1144,6 +1172,7 @@ fn open_pixels(
         raw_open: None,
         raw_curve: None,
         pending: None,
+        stale_preset_preview: false,
         preview_error: None,
         gpu,
         source_key: crate::camera_raw_gpu::source_key(),
@@ -1292,6 +1321,7 @@ fn menu_update(app: &mut PhotocraftApp, ctx: &egui::Context, ui: &Value) -> Opti
         d.curve_state = Default::default();
     }
     if d.params != next_params {
+        d.clear_preset_preview();
         remember_edit(d);
         d.dirty = true;
         d.params = next_params;
@@ -1382,6 +1412,7 @@ fn remember_edit(d: &mut CameraRawDialog) {
 }
 
 fn undo_edit(d: &mut CameraRawDialog) -> bool {
+    d.clear_preset_preview();
     let Some(prev) = d.undo.pop() else { return false };
     d.redo.push(d.params.clone());
     if d.params.point_curve != prev.point_curve {
@@ -1394,6 +1425,7 @@ fn undo_edit(d: &mut CameraRawDialog) -> bool {
 }
 
 fn redo_edit(d: &mut CameraRawDialog) -> bool {
+    d.clear_preset_preview();
     let Some(next) = d.redo.pop() else { return false };
     d.undo.push(d.params.clone());
     if d.params.point_curve != next.point_curve {
@@ -1602,6 +1634,7 @@ fn draw(app: &mut PhotocraftApp, ctx: &egui::Context, own_window: bool) {
     let mut preset_acts = Vec::new();
     egui::Area::new(egui::Id::unique("camera-raw-dialog")).order(egui::Order::Foreground).fixed_pos(screen.min).show(ctx, |ui| {
         let Some(d) = app.camera_raw.as_mut() else { return };
+        d.presets.hovered = None;
         history_keys(d, ctx);
         let pointer = ctx.input(|i| i.pointer.primary_down());
         if pointer && d.edit_origin.is_none() {
@@ -1656,9 +1689,10 @@ fn draw(app: &mut PhotocraftApp, ctx: &egui::Context, own_window: bool) {
             // Never tile a checker across the offscreen extent of a highly zoomed image.
             widgets::checker(preview.painter(), r.intersect(view), 8.0);
             preview.painter().image(tex.id(), r, ERect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
-            let raw_tone = d.raw_curve.is_some() && !raw_stage(&d.params).is_neutral();
+            let preview_params = d.preview_params().clone();
+            let raw_tone = d.raw_curve.is_some() && !raw_stage(&preview_params).is_neutral();
             let detail_needed = !raw_tone && (r.width() * ctx.pixels_per_point() > d.pw as f32 || r.height() * ctx.pixels_per_point() > d.ph as f32);
-            d.detail.paint(&preview, r, d.preview_revision, d.show_before, &d.params, detail_needed, &d.display);
+            d.detail.paint(&preview, r, d.preview_revision, d.show_before, &preview_params, detail_needed, &d.display);
             if d.detail.pending() {
                 ctx.request_repaint_after(std::time::Duration::from_millis(50));
             }
@@ -1866,6 +1900,24 @@ fn draw(app: &mut PhotocraftApp, ctx: &egui::Context, own_window: bool) {
     });
     super::camera_raw_scope_ui::persist(app, ctx);
     super::camera_raw_presets_ui::run(app, preset_acts);
+    let pointer_event = ctx.input(|i| {
+        i.events
+            .iter()
+            .any(|e| matches!(e, egui::Event::PointerMoved(_) | egui::Event::PointerButton { .. } | egui::Event::PointerGone | egui::Event::MouseWheel { .. }))
+    });
+    if let Some(d) = app.camera_raw.as_mut() {
+        d.presets.controlled_preview &= !pointer_event;
+    }
+    if app.camera_raw.as_ref().is_some_and(|d| !d.presets.controlled_preview) {
+        let hovered = app.camera_raw.as_ref().and_then(|d| d.presets.hovered.clone());
+        if let Err(e) = super::camera_raw_presets_ui::preview(app, hovered.as_ref().map(|(g, n)| (g.as_str(), n.as_str()))) {
+            app.ui.status_error = true;
+            app.ui.status = e;
+        }
+    }
+    if app.camera_raw.as_ref().is_some_and(|d| d.dirty) {
+        ctx.request_repaint();
+    }
     if ctx.input(|i| i.key_pressed(egui::Key::Y))
         && let Some(d) = app.camera_raw.as_mut()
     {
@@ -1990,6 +2042,29 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
         panic!("the Camera Raw preview worker never finished");
+    }
+
+    #[test]
+    fn leaving_a_preset_discards_its_unfinished_preview() {
+        let (mut app, ctx) = worker_app();
+        app.run("cameraRaw.presets.save", json!({"name": "Bright", "settings": {"exposure": 1.0}})).unwrap();
+        super::super::camera_raw_presets_ui::preview(&mut app, Some(("User Presets", "Bright"))).unwrap();
+        let d = app.camera_raw.as_mut().unwrap();
+        let stale = d.proxy_job().run();
+        let (tx, rx) = std::sync::mpsc::channel();
+        d.pending = Some(rx);
+        d.dirty = false;
+        let pixels = d.processed.clone();
+        let revision = d.preview_revision;
+        super::super::camera_raw_presets_ui::preview(&mut app, None).unwrap();
+        tx.send(Ok(stale)).unwrap();
+        let d = app.camera_raw.as_mut().unwrap();
+        d.poll_render(&ctx).unwrap();
+        assert_eq!(d.preview_revision, revision, "the stale hovered rendering was discarded");
+        assert_eq!(d.processed, pixels);
+        assert!(d.dirty && !d.render_pending(), "the restored settings can render next");
+        d.render(&ctx);
+        assert_eq!(d.processed, pixels);
     }
 
     /// The dialog's controls develop the proxy on a worker (#5964): the frame it shows is the one

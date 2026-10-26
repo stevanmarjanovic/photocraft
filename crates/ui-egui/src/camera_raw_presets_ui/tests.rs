@@ -154,7 +154,19 @@ fn the_presets_panel_draws_and_clicking_a_preset_applies_it() {
     // The favourite is listed twice (Favorites and its group); click the first row.
     let rows: Vec<_> = h.get_all_by_label("Mono").collect();
     assert_eq!(rows.len(), 2);
-    rows[0].click();
+    let row = rows[0].rect().center();
+    h.hover_at(row);
+    h.run_steps(3);
+    let d = h.state().camera_raw.as_ref().unwrap();
+    assert_eq!(d.params.saturation, 0.0, "hover does not apply the preset");
+    assert_eq!(d.preview_params().saturation, -100.0);
+    assert_eq!(d.presets.preview.as_ref().unwrap().name, "Mono");
+    h.hover_at(egui::pos2(10.0, 10.0));
+    h.run_steps(3);
+    assert!(h.state().camera_raw.as_ref().unwrap().presets.preview.is_none());
+    h.hover_at(row);
+    h.run_steps(2);
+    h.get_all_by_label("Mono").next().unwrap().click();
     h.run_steps(2);
     let app = h.state();
     assert_eq!(app.camera_raw.as_ref().unwrap().params.saturation, -100.0, "{}", app.ui.status);
@@ -205,4 +217,80 @@ fn applying_a_preset_can_be_undone_and_redone_in_the_dialog() {
     assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, -1.0);
     menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"redo": true}})).unwrap().unwrap();
     assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, 0.75);
+}
+
+#[test]
+fn hovering_partial_presets_renders_from_current_settings_without_accumulating() {
+    let (mut app, _) = app_with(Vec::new());
+    let ctx = egui::Context::default();
+    set(&mut app, &ctx, json!({"exposure": 0.25, "saturation": 15}));
+    app.run("cameraRaw.presets.save", json!({"name": "Bright", "settings": {"exposure": 1.0}})).unwrap();
+    app.run("cameraRaw.presets.save", json!({"name": "Mono", "settings": {"saturation": -100}})).unwrap();
+    let original = app.camera_raw.as_ref().unwrap().params.clone();
+    let pixels = app.camera_raw.as_ref().unwrap().processed.clone();
+    let r = presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    assert_eq!(r["previewing"]["name"], "Bright");
+    let d = app.camera_raw.as_mut().unwrap();
+    d.render(&ctx);
+    assert_ne!(d.processed, pixels, "hover changes the rendered pixels");
+    assert_eq!(d.params, original);
+    assert_eq!(d.preview_params().saturation, 15.0);
+    let revision = d.preview_revision;
+    presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    assert!(!app.camera_raw.as_ref().unwrap().dirty, "a stationary pointer does not render again");
+    assert_eq!(app.camera_raw.as_ref().unwrap().preview_revision, revision);
+    presets(&mut app, &ctx, json!({"preview": "Mono"})).unwrap();
+    let d = app.camera_raw.as_ref().unwrap();
+    assert_eq!(d.preview_params().exposure, 0.25, "previous partial preset does not leak");
+    assert_eq!(d.preview_params().saturation, -100.0);
+    assert_eq!(d.command_params(), json!({"exposure": 0.25, "saturation": 15.0}));
+    presets(&mut app, &ctx, json!({"preview": null})).unwrap();
+    let d = app.camera_raw.as_mut().unwrap();
+    d.render(&ctx);
+    assert_eq!(d.processed, pixels, "leaving restores the original rendering");
+    assert_eq!(d.params, original);
+    // Hover has not consumed undo or cleared redo.
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"undo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, 0.0);
+    presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"redo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params, original);
+}
+
+#[test]
+fn hover_then_apply_is_one_edit_and_bad_preview_requests_change_nothing() {
+    let (mut app, _) = app_with(Vec::new());
+    let ctx = egui::Context::default();
+    set(&mut app, &ctx, json!({"exposure": -0.5}));
+    app.run("cameraRaw.presets.save", json!({"name": "Bright", "settings": {"exposure": 1.0}})).unwrap();
+    presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    for request in [json!({"preview": false}), json!({"preview": "Missing"}), json!({"preview": "Bright", "apply": "Bright"})] {
+        assert!(presets(&mut app, &ctx, request).is_err());
+        let d = app.camera_raw.as_ref().unwrap();
+        assert_eq!(d.params.exposure, -0.5);
+        assert_eq!(d.presets.preview.as_ref().unwrap().name, "Bright");
+    }
+    presets(&mut app, &ctx, json!({"apply": "Bright"})).unwrap();
+    assert!(app.camera_raw.as_ref().unwrap().presets.preview.is_none());
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"undo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, -0.5);
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"redo": true}})).unwrap().unwrap();
+    assert_eq!(app.camera_raw.as_ref().unwrap().params.exposure, 1.0);
+    presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    presets(&mut app, &ctx, json!({"panel": "edit"})).unwrap();
+    assert!(app.camera_raw.as_ref().unwrap().presets.preview.is_none());
+}
+
+#[test]
+fn committing_while_previewing_keeps_the_real_settings() {
+    let (mut app, _) = app_with(Vec::new());
+    let ctx = egui::Context::default();
+    set(&mut app, &ctx, json!({}));
+    app.run("cameraRaw.presets.save", json!({"name": "Bright", "settings": {"exposure": 1.0}})).unwrap();
+    let before = app.camera_raw.as_ref().unwrap().proxy.as_ref().clone();
+    presets(&mut app, &ctx, json!({"preview": "Bright"})).unwrap();
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({"ui": {"commit": true}})).unwrap().unwrap();
+    menu(&mut app, &ctx, "filter.cameraRaw", &json!({})).unwrap().unwrap();
+    let after = &app.camera_raw.as_ref().unwrap().proxy;
+    assert_eq!(&before, after.as_ref());
 }

@@ -533,7 +533,12 @@ preset's settings over the dialog's (the others stay; OK commits them as usual),
 saves the chosen sections of the current settings (every section by default),
 `{"update":name}` replaces a preset's values with the current ones (same settings kept),
 `{"import":true}` and `{"export":name}` read or write a Camera Raw preset `.xmp` through the file
-dialog. `ui.inspect.cameraRaw.presets` is `{panel, applied: {group, name}|null}`. The list itself
+dialog. `{"preview":name,"group":name?}` simulates hovering a preset; `{"preview":null}`
+ends it. Preview changes rendering only, using current settings as its base; it never changes
+applied settings, undo/redo, saved settings or the committed result. Moving the pointer or
+pressing a pointer button returns control to the actual hovered row. Switching panels also ends
+the preview. `ui.inspect.cameraRaw.presets` is
+`{panel, applied: {group, name}|null, previewing: {group, name}|null}`. The list itself
 belongs to the engine (`cameraRaw.presets.*` below), so agents can also list, save, rename,
 favourite, move, delete, import and export presets without the dialog; presets persist with the
 preferences.

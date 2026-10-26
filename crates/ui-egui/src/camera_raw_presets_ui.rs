@@ -7,15 +7,18 @@
 //!
 //! The list is the engine's (`cameraRaw.presets.*` commands, persisted with the preferences),
 //! so every edit here is a command. Applying a preset changes only the dialog's settings, like
-//! moving a slider; OK commits them.
+//! moving a slider; OK commits them. Hovering previews a rendering-only overlay; leaving
+//! the row restores the current settings without adding an undo step.
 //!
 //! Control channel: `{"ui":{"presets":{…}}}` on `filter.cameraRaw`, one of
 //! `{"panel":"presets"|"edit"}`, `{"apply":name,"group":name?}`,
+//! `{"preview":name|null,"group":name?}` (null ends the preview),
 //! `{"create":{"name":str,"group":name?,"sections":[section names]?}}` (default every section),
 //! `{"update":name,"group":name?}`, `{"import":true}` and `{"export":name,"group":name?}` (file
 //! dialogs). Other edits go straight to the `cameraRaw.presets.*` commands.
 
 use egui::{Sense, vec2};
+use photocraft_algo::camera_raw::CameraRaw;
 use photocraft_engine::camera_raw_preset_cmds::{CameraRawPreset, SECTIONS, USER_GROUP, subset};
 use photocraft_engine::presets::Group;
 use serde_json::{Value, json};
@@ -30,11 +33,23 @@ pub(crate) struct PresetsView {
     /// The Presets panel is showing instead of the edit panels.
     pub(crate) shown: bool,
     filter: String,
+    /// Row under the pointer this frame; cleared even when the panel is hidden.
+    pub(crate) hovered: Option<(String, String)>,
+    pub(crate) preview: Option<Preview>,
+    /// A control request simulates hover until the pointer moves or a button is pressed.
+    pub(crate) controlled_preview: bool,
     create: Option<CreateForm>,
     rename: Option<Rename>,
     new_group: Option<String>,
     /// The preset last applied in this dialog (highlighted in the list).
     pub(crate) applied: Option<(String, String)>,
+}
+
+/// Rendering-only overlay. Committed dialog settings and undo never contain it.
+pub(crate) struct Preview {
+    pub(crate) group: String,
+    pub(crate) name: String,
+    pub(crate) params: CameraRaw,
 }
 
 struct CreateForm {
@@ -128,7 +143,8 @@ pub(crate) fn panel(ui: &mut egui::Ui, view: &mut PresetsView, groups: &[Group<C
         let text = if needle.is_empty() { tl!("No presets yet. Use + to save the current settings as a preset.") } else { tl!("No presets match.") };
         ui.label(egui::RichText::new(text).color(t.text_faint));
     }
-    let favorites: Vec<(&str, &CameraRawPreset)> = groups.iter().flat_map(|g| g.items.iter().filter(|p| p.favorite && matches(p)).map(|p| (g.name.as_str(), p))).collect();
+    let favorites: Vec<(&str, &CameraRawPreset)> =
+        groups.iter().flat_map(|g| g.items.iter().filter(|p| p.favorite && matches(p)).map(|p| (g.name.as_str(), p))).collect();
     let group_names: Vec<&str> = groups.iter().map(|g| g.name.as_str()).collect();
     if !favorites.is_empty() {
         header(ui, egui::Id::unique("camera-raw-favorites"), tl!("Favorites"), |ui| {
@@ -231,6 +247,9 @@ fn row(ui: &mut egui::Ui, view: &mut PresetsView, group: &str, p: &CameraRawPres
     }
     let settings: Vec<&str> = SECTIONS.iter().filter(|(_, fields)| fields.iter().any(|f| p.settings.contains_key(*f))).map(|(n, _)| section_name(n)).collect();
     let resp = resp.on_hover_text(crate::i18n::fmt(tl!("Settings: {sections}"), &[("sections", &settings.join(", "))]));
+    if resp.hovered() && !resp.secondary_clicked() && !egui::Popup::is_any_open(ui.ctx()) {
+        view.hovered = Some((group.into(), p.name.clone()));
+    }
     if resp.clicked() {
         acts.push(Action::Apply { group: group.into(), name: p.name.clone() });
     }
@@ -276,7 +295,8 @@ fn row(ui: &mut egui::Ui, view: &mut PresetsView, group: &str, p: &CameraRawPres
 /// Create Preset: name, group and the sections to include. True when it closes.
 fn create_form(ui: &mut egui::Ui, form: &mut CreateForm, groups: &[Group<CameraRawPreset>], acts: &mut Vec<Action>) -> bool {
     widgets::section_label(ui, tl!("Create Preset"));
-    let name = widgets::text_field_ex(ui, egui::Id::unique("camera-raw-create-name"), &mut form.name, tl!("Preset name"), ui.available_width(), false, Some(255));
+    let name =
+        widgets::text_field_ex(ui, egui::Id::unique("camera-raw-create-name"), &mut form.name, tl!("Preset name"), ui.available_width(), false, Some(255));
     if std::mem::take(&mut form.focus) {
         name.request_focus();
     }
@@ -355,6 +375,27 @@ fn run_one(app: &mut PhotocraftApp, act: Action) -> Result<Value, String> {
         Action::Import => import(app),
         Action::Export { group, name } => export(app, Some(&group), &name),
     }
+}
+
+/// Preview from the real settings every time: moving between partial presets must not
+/// accumulate settings from the previously hovered row.
+pub(crate) fn preview(app: &mut PhotocraftApp, target: Option<(&str, &str)>) -> Result<Value, String> {
+    let preset = target.map(|(group, name)| find_preset(app, Some(group), name)).transpose()?;
+    let d = app.camera_raw.as_mut().ok_or(tl!("Camera Raw isn't open"))?;
+    let next = match preset {
+        Some((group, preset)) => {
+            let params = photocraft_engine::camera_raw_preset_cmds::apply(&d.params, &preset.settings)?;
+            params.validate_changes(d.original())?;
+            Some(Preview { group, name: preset.name, params })
+        }
+        None => None,
+    };
+    let params = next.as_ref().map_or(&d.params, |p| &p.params);
+    if params != d.preview_params() {
+        d.invalidate_preset_preview();
+    }
+    d.presets.preview = next;
+    Ok(json!({"previewing": d.presets.preview.as_ref().map(|p| json!({"group": p.group, "name": p.name}))}))
 }
 
 /// Apply a preset's settings over the dialog's.
@@ -436,14 +477,11 @@ pub(crate) fn control(app: &mut PhotocraftApp, request: &Value) -> Result<Value,
     let fields = request.as_object().ok_or("Camera Raw presets must be an object")?;
     let d = app.camera_raw.as_mut().ok_or(tl!("Camera Raw isn't open"))?;
     let group = request.get("group").map(|g| g.as_str().ok_or("presets.group must be a string")).transpose()?;
-    let action = ["panel", "apply", "create", "update", "import", "export"]
-        .into_iter()
-        .filter(|k| fields.contains_key(*k))
-        .collect::<Vec<_>>();
-    if let Some(k) = fields.keys().find(|k| !matches!(k.as_str(), "panel" | "apply" | "create" | "update" | "import" | "export" | "group")) {
+    let action = ["panel", "apply", "preview", "create", "update", "import", "export"].into_iter().filter(|k| fields.contains_key(*k)).collect::<Vec<_>>();
+    if let Some(k) = fields.keys().find(|k| !matches!(k.as_str(), "panel" | "apply" | "preview" | "create" | "update" | "import" | "export" | "group")) {
         return Err(format!("unknown Camera Raw presets property {k}"));
     }
-    let [action] = action[..] else { return Err("send one of panel, apply, create, update, import or export".into()) };
+    let [action] = action[..] else { return Err("send one of panel, apply, preview, create, update, import or export".into()) };
     let value = &request[action];
     let name = || value.as_str().map(str::trim).filter(|s| !s.is_empty()).ok_or(format!("presets.{action} must be a preset name"));
     match action {
@@ -453,7 +491,23 @@ pub(crate) fn control(app: &mut PhotocraftApp, request: &Value) -> Result<Value,
                 Some("edit") => false,
                 _ => return Err("presets.panel must be \"presets\" or \"edit\"".into()),
             };
+            d.clear_preset_preview();
             Ok(json!({"panel": value}))
+        }
+        "preview" if value.is_null() => {
+            let result = preview(app, None)?;
+            if let Some(d) = app.camera_raw.as_mut() {
+                d.presets.controlled_preview = false;
+            }
+            Ok(result)
+        }
+        "preview" => {
+            let (group, preset) = find_preset(app, group, name()?)?;
+            let result = preview(app, Some((&group, &preset.name)))?;
+            if let Some(d) = app.camera_raw.as_mut() {
+                d.presets.controlled_preview = true;
+            }
+            Ok(result)
         }
         "apply" => apply(app, group, name()?),
         "update" => update(app, group, name()?),
